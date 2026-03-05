@@ -1,21 +1,30 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../models/registration_model.dart';
+// Note: You might not even need the registration_model import anymore
+// if you are passing the Map directly!
 
 class RegistrationController {
-  // Use 10.0.2.2 to connect from the Android Emulator to your local Mac server
+  // Use 10.0.2.2 to connect from the Android Emulator to your local server
   static const String _baseUrl = 'http://10.0.2.2:8000/api';
 
-  Future<http.Response> registerUser(RegistrationModel data) async {
+  // CHANGE: Parameter changed from 'RegistrationModel data' to 'Map<String, dynamic> data'
+  Future<http.Response> registerUser(Map<String, dynamic> data) async {
     final url = Uri.parse('$_baseUrl/register');
 
     try {
-      // The controller sends the "packaged" data from the model to the API
+      // Since 'data' is already a Map, we can encode it directly
       final response = await http.post(
         url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(data.toJson()),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json", // FIX: Moved inside the headers Map
+        },
+        body: jsonEncode(data),
       );
+      if (response.statusCode == 422) {
+        // This will print EXACTLY which field failed (e.g., "The mobile has already been taken")
+        print("Validation Errors: ${response.body}");
+      }
 
       return response;
     } catch (e) {

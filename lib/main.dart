@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:the_digital_registration/views/register_screen.dart';
+import 'package:the_digital_registration/views/login_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,8 +13,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'The Digital Registration',
-      theme: ThemeData(
+
         // This is the theme of your application.
         //
         // TRY THIS: Try running your application with "flutter run". You'll see
@@ -29,9 +31,26 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+
+
+      // Inside your MaterialApp widget
+      theme: ThemeData(
+        useMaterial3: true,
+        primaryColor: const Color(0xFFF26522), // Startup India Orange
+        scaffoldBackgroundColor: const Color(0xFFFFF9F0), // Soft Cream background
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFF26522),
+          primary: const Color(0xFFF26522),
+          surface: Colors.white,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFF26522),
+            foregroundColor: Colors.white,
+          ),
+        ),
       ),
-      home: const RegisterScreen(),
+      home: const LoginScreen(),
     );
   }
 }
