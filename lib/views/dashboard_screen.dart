@@ -115,9 +115,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
 
           // --- FARMERS ---
+          // --- FARMERS ---
           if (category == 'Farmers') ...[
-            _serviceCard(Icons.request_quote, "Loan Form", "Kisan Credit", const FarmerLoanForm(), context),
-            _serviceCard(Icons.add_a_photo, "Crop Registration", "Add Image, Name, Price", const CropRegistrationScreen(), context),
+            // 1. Remove 'const'
+            // 2. Add 'userData: widget.userData'
+            _serviceCard(Icons.request_quote, "Loan Form", "Kisan Credit", FarmerLoanForm(userData: widget.userData), context),
+
+            _serviceCard(Icons.add_a_photo, "Crop Registration", "Add Image, Name, Price", CropRegistrationScreen(userData: widget.userData), context),
+
             _serviceCard(Icons.security, "Bima Yojana", "Crop Insurance", const BimaYojanaScreen(), context),
             _serviceCard(Icons.account_balance_wallet, "Subsidy", "Govt Benefits", const SubsidyScreen(), context),
           ],

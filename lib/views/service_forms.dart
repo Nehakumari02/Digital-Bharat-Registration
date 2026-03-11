@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:the_digital_registration/controllers/service_controller.dart';
+import '../controllers/lead_controller.dart';
+import '../models/lead_model.dart';
 
 // --- SHARED UI HELPERS ---
 Widget _buildSectionTitle(String title) {
@@ -219,8 +222,35 @@ class ApplicantsScreen extends StatelessWidget {
 
 // --- 3. FARMER SERVICES ---
 
-class CropRegistrationScreen extends StatelessWidget {
-  const CropRegistrationScreen({super.key});
+class CropRegistrationScreen extends StatefulWidget {
+  final Map<String, dynamic> userData;
+  const CropRegistrationScreen({super.key, required this.userData});
+
+  @override
+  State<CropRegistrationScreen> createState() => _CropRegistrationScreenState();
+}
+
+class _CropRegistrationScreenState extends State<CropRegistrationScreen> {
+  final _nameController = TextEditingController();
+  final _priceController = TextEditingController();
+  bool _isSaving = false;
+
+  void _saveCrop() async {
+    setState(() => _isSaving = true);
+    final payload = {
+      "user_id": widget.userData['id'],
+      "type": "crop_reg",
+      "data": {
+        "crop_name": _nameController.text,
+        "price": _priceController.text,
+        // Add image logic here later
+      }
+    };
+
+    bool success = await ServiceController().submitData(payload);
+    if (success && mounted) Navigator.pop(context);
+    setState(() => _isSaving = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -236,15 +266,13 @@ class CropRegistrationScreen extends StatelessWidget {
               child: const Icon(Icons.add_a_photo, size: 50, color: Colors.grey),
             ),
             const SizedBox(height: 20),
-            TextField(decoration: _inputStyle("Crop Name", Icons.grass)),
+            TextField(controller: _nameController, decoration: _inputStyle("Crop Name", Icons.grass)),
             const SizedBox(height: 15),
-            TextField(decoration: _inputStyle("Price per Quintal", Icons.sell)),
+            TextField(controller: _priceController, decoration: _inputStyle("Price per Quintal", Icons.sell)),
             const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-              child: const Text("REGISTER CROP"),
-            ),
+            _isSaving
+                ? const CircularProgressIndicator()
+                : ElevatedButton(onPressed: _saveCrop, child: const Text("REGISTER CROP")),
           ],
         ),
       ),
@@ -252,8 +280,55 @@ class CropRegistrationScreen extends StatelessWidget {
   }
 }
 
-class FarmerLoanForm extends StatelessWidget {
-  const FarmerLoanForm({super.key});
+// --- FARMER LOAN FORM (KCC) ---
+class FarmerLoanForm extends StatefulWidget {
+  final Map<String, dynamic> userData; // Correct: Defined in Widget class
+  const FarmerLoanForm({super.key, required this.userData});
+
+  @override
+  State<FarmerLoanForm> createState() => _FarmerLoanFormState();
+}
+
+class _FarmerLoanFormState extends State<FarmerLoanForm> {
+  final _landSizeController = TextEditingController();
+  final _khasraController = TextEditingController();
+  final _amountController = TextEditingController();
+  bool _isSaving = false;
+
+  void _applyForLoan() async {
+    if (_landSizeController.text.isEmpty || _amountController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill all required fields")),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    final payload = {
+      "user_id": widget.userData['id'], // Accessing via 'widget.'
+      "type": "kisan_loan",
+      "data": {
+        "land_size": _landSizeController.text,
+        "khasra_number": _khasraController.text,
+        "amount": _amountController.text,
+      }
+    };
+
+    bool success = await ServiceController().submitData(payload);
+
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Loan Application Submitted Successfully!")),
+      );
+      Navigator.pop(context);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to submit. Please check your connection.")),
+      );
+    }
+    setState(() => _isSaving = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -265,14 +340,27 @@ class FarmerLoanForm extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionTitle("Land & Loan Details"),
-            TextField(decoration: _inputStyle("Land Size (in Acres)", Icons.landscape)),
+            TextField(
+              controller: _landSizeController,
+              decoration: _inputStyle("Land Size (in Acres)", Icons.landscape),
+              keyboardType: TextInputType.number,
+            ),
             const SizedBox(height: 15),
-            TextField(decoration: _inputStyle("Khasra/Khatauni Number", Icons.numbers)),
+            TextField(
+              controller: _khasraController,
+              decoration: _inputStyle("Khasra/Khatauni Number", Icons.numbers),
+            ),
             const SizedBox(height: 15),
-            TextField(decoration: _inputStyle("Required Amount", Icons.currency_rupee)),
+            TextField(
+              controller: _amountController,
+              decoration: _inputStyle("Required Amount", Icons.currency_rupee),
+              keyboardType: TextInputType.number,
+            ),
             const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () {},
+            _isSaving
+                ? const Center(child: CircularProgressIndicator())
+                : ElevatedButton(
+              onPressed: _applyForLoan,
               style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
               child: const Text("APPLY FOR KCC LOAN"),
             ),
@@ -348,24 +436,52 @@ class SubsidyScreen extends StatelessWidget {
 
 // --- 4. BANK SERVICES ---
 
-class AllLeadsScreen extends StatelessWidget {
+// Change StatelessWidget to StatefulWidget
+class AllLeadsScreen extends StatefulWidget {
   const AllLeadsScreen({super.key});
+
+  @override
+  State<AllLeadsScreen> createState() => _AllLeadsScreenState();
+}
+
+class _AllLeadsScreenState extends State<AllLeadsScreen> {
+  // Use the controller we made in the previous step
+  final LeadController _leadController = LeadController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Loan Applications (Leads)")),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _leadItem("Karan Mehra", "Farmer Loan", "₹2,50,000"),
-          _leadItem("Suresh Raina", "Business Loan", "₹10,00,000"),
-          _leadItem("Amit Singh", "Education Loan", "₹5,00,000"),
-        ],
+      body: FutureBuilder<List<LeadModel>>(
+        future: _leadController.fetchAllLeads(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          }
+
+          final leads = snapshot.data ?? [];
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: leads.length,
+            itemBuilder: (context, index) {
+              // Using your existing _leadItem helper or the new LeadCard widget
+              return _leadItem(
+                  leads[index].name,
+                  leads[index].loanType,
+                  leads[index].amount
+              );
+            },
+          );
+        },
       ),
     );
   }
 
+  // Your existing helper function
   Widget _leadItem(String name, String type, String amount) {
     return Card(
       child: ListTile(
