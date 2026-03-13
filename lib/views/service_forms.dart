@@ -436,31 +436,52 @@ class SubsidyScreen extends StatelessWidget {
 
 // --- 4. BANK SERVICES ---
 
-// Change StatelessWidget to StatefulWidget
 class AllLeadsScreen extends StatefulWidget {
-  const AllLeadsScreen({super.key});
+  final int currentBankUserId; // Pass this from your login/session
+  const AllLeadsScreen({super.key,required this.currentBankUserId});
+
 
   @override
   State<AllLeadsScreen> createState() => _AllLeadsScreenState();
 }
 
 class _AllLeadsScreenState extends State<AllLeadsScreen> {
-  // Use the controller we made in the previous step
   final LeadController _leadController = LeadController();
+
+  Key _refreshKey = UniqueKey(); // Used to force refresh the list
+
+  void _handleClaim(int id) async {
+    // 1. Call the API
+    bool success = await _leadController.updateLeadStatus(id, "Approved",widget.currentBankUserId);
+
+    if (success && mounted) {
+      // 2. Only if the API returned true, update the UI
+      setState(() {
+        // Changing the key forces the FutureBuilder to run the 'future' again
+        _refreshKey = UniqueKey();
+      });
+    } else {
+      // Handle failure (maybe the server is down?)
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to update status on server")),
+      );
+    }
+
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Loan Applications (Leads)")),
       body: FutureBuilder<List<LeadModel>>(
+        key: _refreshKey,
         future: _leadController.fetchAllLeads(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError) {
+          if (snapshot.hasError)
             return Center(child: Text("Error: ${snapshot.error}"));
-          }
 
           final leads = snapshot.data ?? [];
 
@@ -468,12 +489,8 @@ class _AllLeadsScreenState extends State<AllLeadsScreen> {
             padding: const EdgeInsets.all(16),
             itemCount: leads.length,
             itemBuilder: (context, index) {
-              // Using your existing _leadItem helper or the new LeadCard widget
-              return _leadItem(
-                  leads[index].name,
-                  leads[index].loanType,
-                  leads[index].amount
-              );
+              final lead = leads[index];
+              return _leadItem(lead);
             },
           );
         },
@@ -481,34 +498,95 @@ class _AllLeadsScreenState extends State<AllLeadsScreen> {
     );
   }
 
-  // Your existing helper function
-  Widget _leadItem(String name, String type, String amount) {
+  Widget _leadItem(LeadModel lead) {
+    // Check if the status is already approved or claimed
+    bool isClaimed = lead.status.toLowerCase() == "approved" || lead.status.toLowerCase() == "claimed";
+
     return Card(
+      margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(type),
-        trailing: Text(amount, style: const TextStyle(color: Color(0xFFF26522), fontWeight: FontWeight.bold)),
+        title: Text(
+            lead.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("${lead.loanType} • ${lead.amount}"),
+            const SizedBox(height: 4),
+            Text(
+              isClaimed ? "APPROVED" : lead.status.toUpperCase(),
+              style: TextStyle(
+                  fontSize: 12,
+                  color: isClaimed ? Colors.green : Colors.orange,
+                  fontWeight: FontWeight.bold
+              ),
+            ),
+          ],
+        ),
+        trailing: ElevatedButton(
+          // If claimed, onPressed is null (disables button)
+          onPressed: isClaimed ? null : () => _handleClaim(lead.id),
+          style: ElevatedButton.styleFrom(
+            // Change color based on state
+            backgroundColor: isClaimed ? Colors.grey : const Color(0xFFF26522),
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: Colors.grey[300], // Color when disabled
+            disabledForegroundColor: Colors.grey[600],
+          ),
+          child: Text(isClaimed ? "CLAIMED" : "CLAIM"),
+        ),
       ),
     );
   }
 }
 
-class AcceptedLeadsScreen extends StatelessWidget {
-  const AcceptedLeadsScreen({super.key});
+
+class AcceptedLeadsScreen extends StatefulWidget {
+  final int currentBankUserId; // Pass this from your login/session
+  const AcceptedLeadsScreen({super.key, required this.currentBankUserId});
+
+  @override
+  State<AcceptedLeadsScreen> createState() => _AcceptedLeadsScreenState();
+}
+
+class _AcceptedLeadsScreenState extends State<AcceptedLeadsScreen> {
+  final LeadController _leadController = LeadController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Approved Loans")),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.check_circle_outline, size: 80, color: Colors.green),
-            SizedBox(height: 10),
-            Text("No new approvals today.", style: TextStyle(color: Colors.grey)),
-          ],
-        ),
+      appBar: AppBar(title: const Text("My Approved Loans")),
+      body: FutureBuilder<List<LeadModel>>(
+        // Call a specific method that filters by User ID
+        future: _leadController.fetchMyLeads(widget.currentBankUserId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final leads = snapshot.data ?? [];
+
+          if (leads.isEmpty) {
+            return const Center(child: Text("You haven't approved any loans yet."));
+          }
+
+          return ListView.builder(
+            itemCount: leads.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                leading: const Icon(Icons.verified, color: Colors.green),
+                title: Text(leads[index].name),
+                subtitle: Text(leads[index].mobile),
+                trailing: Text(
+                  leads[index].amount,
+                  style: const TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold
+                  ),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }

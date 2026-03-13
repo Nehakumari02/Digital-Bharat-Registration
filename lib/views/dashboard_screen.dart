@@ -129,8 +129,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           // --- BANK ---
           if (category == 'Bank') ...[
-            _serviceCard(Icons.list_alt, "All Leads", "New applications", const AllLeadsScreen(), context),
-            _serviceCard(Icons.check_circle, "Accepted Leads", "Approved loans", const AcceptedLeadsScreen(), context),
+            _serviceCard(Icons.list_alt, "All Leads", "New applications", AllLeadsScreen(currentBankUserId: widget.userData['id']), context),
+            _serviceCard(Icons.check_circle, "Accepted Leads", "Approved loans", AcceptedLeadsScreen(currentBankUserId: widget.userData['id']), context),
           ],
         ],
       ),

@@ -19,4 +19,42 @@ class LeadController {
       throw Exception("Error: $e");
     }
   }
+  // controllers/lead_controller.dart
+
+// inside LeadController
+  Future<bool> updateLeadStatus(int id, String status, int currentBankUserId) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$_url/update-status"),
+        body: {
+          'id': id.toString(),
+          'status': status,
+          'bank_user_id': currentBankUserId.toString()
+        },
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<List<LeadModel>> fetchMyLeads(int userId) async {
+    try {
+      // Send the userId as a query parameter
+      final response = await http.get(
+          Uri.parse("$_url/my-accepted-leads?bank_user_id=$userId")
+      );
+      print("Fetching for User ID: $userId");
+      print("Response: ${response.body}"); // CHECK THIS IN YOUR CONSOLE
+
+      if (response.statusCode == 200) {
+        List<dynamic> body = jsonDecode(response.body);
+        return body.map((item) => LeadModel.fromJson(item)).toList();
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
 }
