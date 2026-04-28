@@ -475,7 +475,7 @@ class _AllLeadsScreenState extends State<AllLeadsScreen> {
       appBar: AppBar(title: const Text("Loan Applications (Leads)")),
       body: FutureBuilder<List<LeadModel>>(
         key: _refreshKey,
-        future: _leadController.fetchAllLeads(),
+        future: _leadController.fetchAllLeads(widget.currentBankUserId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -484,6 +484,32 @@ class _AllLeadsScreenState extends State<AllLeadsScreen> {
             return Center(child: Text("Error: ${snapshot.error}"));
 
           final leads = snapshot.data ?? [];
+
+          // --- ADD THIS CHECK ---
+          if (leads.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.location_off_outlined, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "No leads available for you",
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    "There are no farmers within 100km of your location.",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            );
+          }
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),

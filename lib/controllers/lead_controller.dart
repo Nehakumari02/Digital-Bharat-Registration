@@ -1,22 +1,38 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/lead_model.dart';
+import 'package:flutter/foundation.dart'; // This enables debugPrint
 
 class LeadController {
   static const String _url = 'http://10.0.2.2:8000/api/leads';
 
-  Future<List<LeadModel>> fetchAllLeads() async {
+  // Change this to the base API path
+  static const String _baseUrl = 'http://10.0.2.2:8000/api';
+
+  Future<List<LeadModel>> fetchAllLeads(int myUserId) async {
     try {
-      final response = await http.get(Uri.parse(_url));
+      // FIX: Use the correct endpoint without duplicating 'leads'
+      final response = await http.get(
+        Uri.parse("$_baseUrl/leads?bank_user_id=$myUserId"),
+        headers: {
+          'Accept': 'application/json', // Forces Laravel to send JSON instead of HTML
+        },
+      );
+
+      print("Status Code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
         List<dynamic> body = jsonDecode(response.body);
         return body.map((item) => LeadModel.fromJson(item)).toList();
       } else {
-        throw Exception("Failed to load leads");
+        // If it fails, print the body so you can see why
+        debugPrint("Server Error: ${response.body}");
+        return [];
       }
     } catch (e) {
-      throw Exception("Error: $e");
+      debugPrint("Flutter Error: $e");
+      return [];
     }
   }
   // controllers/lead_controller.dart
