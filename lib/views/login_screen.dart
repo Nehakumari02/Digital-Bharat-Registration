@@ -4,7 +4,7 @@ import '../controllers/login_controller.dart';
 import '../models/login_model.dart';
 import 'register_screen.dart';
 import 'dashboard_screen.dart';
-import 'dart:convert'; // THIS IS THE MISSING LINE
+import 'dart:convert';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -59,71 +59,113 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _showSnack(String msg, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: color),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: color));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(30.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.fingerprint_rounded, size: 80, color: Color(0xFFF26522)),
-              const SizedBox(height: 15),
-              const Text("DIGITAL INDIA", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF333333))),
-              const Text("REGISTRATION", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Color(0xFFF26522))),
-              const SizedBox(height: 40),
-
-              CustomTextField(
-                controller: _mobileController,
-                label: "Mobile or Email",
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 15),
-
-              CustomTextField(
-                controller: _passwordController,
-                label: "Password",
-                // Set obscureText: true in your CustomTextField widget
-              ),
-              const SizedBox(height: 24),
-
-              ElevatedButton(
-                onPressed: _isLoading ? null : _handleLogin,
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(55),
-                  backgroundColor: const Color(0xFFF26522),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("LOGIN", style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-
-              const SizedBox(height: 25),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Not registered yet? "),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterScreen()));
-                    },
-                    child: const Text(
-                      "Register Here",
-                      style: TextStyle(color: Color(0xFFF26522), fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
-                    ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFFFF4EB), Colors.white],
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const CircleAvatar(
+                        radius: 34,
+                        backgroundColor: Color(0x1AF26522),
+                        child: Icon(
+                          Icons.fingerprint_rounded,
+                          size: 38,
+                          color: Color(0xFFF26522),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "DIGITAL INDIA",
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      Text(
+                        "REGISTRATION",
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      CustomTextField(
+                        controller: _mobileController,
+                        label: "Mobile or Email",
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      const SizedBox(height: 14),
+                      CustomTextField(
+                        controller: _passwordController,
+                        label: "Password",
+                        obscureText: true,
+                      ),
+                      const SizedBox(height: 22),
+                      ElevatedButton(
+                        onPressed: _isLoading ? null : _handleLogin,
+                        child:
+                            _isLoading
+                                ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2.6,
+                                  ),
+                                )
+                                : const Text("LOGIN"),
+                      ),
+                      const SizedBox(height: 18),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("Not registered yet? "),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const RegisterScreen(),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              "Register Here",
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ],
+            ),
           ),
         ),
       ),

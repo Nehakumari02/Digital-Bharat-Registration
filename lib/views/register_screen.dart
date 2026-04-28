@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../controllers/registration_controller.dart';
-import '../models/registration_model.dart';
-import '../widgets/custom_text_field.dart'; // Import your new widget
-import 'login_screen.dart'; // Ensure this file exists in your lib/views folder
+import '../widgets/custom_text_field.dart';
 import 'category_details_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -122,120 +118,160 @@ class _RegisterScreenState extends State<RegisterScreen> {
       appBar: AppBar(title: const Text("Register")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              CustomTextField(controller: _nameController, label: 'Full Name',
-                validator: (v) => v!.isEmpty ? "Enter Name" : null,),
-              const SizedBox(height: 10),
-
-              // --- EMAIL FIELD ---
-              CustomTextField(
-                controller: _emailController,
-                label: 'Email Address',
-                keyboardType: TextInputType.emailAddress,
-                validator: (v) => !v!.contains('@') ? "Enter a valid email" : null,
-              ),
-              const SizedBox(height: 10),
-
-              // --- PASSWORD FIELD ---
-              CustomTextField(
-                controller: _passwordController,
-                label: 'Password',
-                // Assuming you might want to hide text, you can add an obscureText
-                // property to your CustomTextField widget later
-                validator: (v) => v!.length < 6 ? "Password must be 6+ characters" : null,
-              ),
-              const SizedBox(height: 10),
-              CustomTextField(controller: _mobileController, label: 'Mobile Number',
-                keyboardType: TextInputType.phone,
-                validator: (v) => v!.length < 10 ? "Enter valid mobile" : null,),
-              const SizedBox(height: 10),
-
-              // Inside the Form -> Column
-              CustomTextField(
-                controller: _pincodeController,
-                label: 'Pincode',
-                keyboardType: TextInputType.number,
-                validator: (v) => v!.length != 6 ? "Enter 6-digit pincode" : null,
-              ),
-              const SizedBox(height: 10),
-
-              CustomTextField(
-                controller: _districtController,
-                label: 'District',
-                validator: (v) => v!.isEmpty ? "Enter District" : null,
-              ),
-              const SizedBox(height: 10),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: CustomTextField(
-                      controller: _cityController,
-                      label: 'City',
-                      validator: (v) => v!.isEmpty ? "Enter City" : null,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: CustomTextField(
-                      controller: _stateController,
-                      label: 'State',
-                      validator: (v) => v!.isEmpty ? "Enter State" : null,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              // Category Dropdown
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                decoration: const InputDecoration(labelText: 'Category'),
-                items: _categories.map((String category) {
-                  return DropdownMenuItem(value: category, child: Text(category));
-                }).toList(),
-                onChanged: (value) => setState(() => _selectedCategory = value),
-              ),
-              const SizedBox(height: 20),
-
-
-              // ElevatedButton(
-              //   onPressed: () {
-              //     if (_formKey.currentState!.validate()) {
-              //       // Logic to save data goes here
-              //       _submitData();
-              //     }
-              //   },
-              //   child: const Text("Register"),
-              // ),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    // Pass the current selection to the next screen
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CategoryDetailsScreen(
-                          name: _nameController.text,
-                          mobile: _mobileController.text,
-                          email: _emailController.text, // PASS EMAIL
-                          password: _passwordController.text, // PASS PASSWORD
-                          category: _selectedCategory!, // One of: Student, Business, Bank, Farmers
-                          // --- ADD THESE NEW LINES ---
-                          pincode: _pincodeController.text,
-                          district: _districtController.text,
-                          city: _cityController.text,
-                          state: _stateController.text,
-                        ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      CustomTextField(
+                        controller: _nameController,
+                        label: 'Full Name',
+                        validator: (v) => v!.isEmpty ? "Enter Name" : null,
                       ),
-                    );
-                  }
-                },
-                child: const Text("Next"),
+                      const SizedBox(height: 10),
+
+                      // --- EMAIL FIELD ---
+                      CustomTextField(
+                        controller: _emailController,
+                        label: 'Email Address',
+                        keyboardType: TextInputType.emailAddress,
+                        validator:
+                            (v) =>
+                                !v!.contains('@')
+                                    ? "Enter a valid email"
+                                    : null,
+                      ),
+                      const SizedBox(height: 10),
+
+                      // --- PASSWORD FIELD ---
+                      CustomTextField(
+                        controller: _passwordController,
+                        label: 'Password',
+                        obscureText: true,
+                        validator:
+                            (v) =>
+                                v!.length < 6
+                                    ? "Password must be 6+ characters"
+                                    : null,
+                      ),
+                      const SizedBox(height: 10),
+                      CustomTextField(
+                        controller: _mobileController,
+                        label: 'Mobile Number',
+                        keyboardType: TextInputType.phone,
+                        validator:
+                            (v) => v!.length < 10 ? "Enter valid mobile" : null,
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Inside the Form -> Column
+                      CustomTextField(
+                        controller: _pincodeController,
+                        label: 'Pincode',
+                        keyboardType: TextInputType.number,
+                        validator:
+                            (v) =>
+                                v!.length != 6 ? "Enter 6-digit pincode" : null,
+                      ),
+                      const SizedBox(height: 10),
+
+                      CustomTextField(
+                        controller: _districtController,
+                        label: 'District',
+                        validator: (v) => v!.isEmpty ? "Enter District" : null,
+                      ),
+                      const SizedBox(height: 10),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: CustomTextField(
+                              controller: _cityController,
+                              label: 'City',
+                              validator:
+                                  (v) => v!.isEmpty ? "Enter City" : null,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: CustomTextField(
+                              controller: _stateController,
+                              label: 'State',
+                              validator:
+                                  (v) => v!.isEmpty ? "Enter State" : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      // Category Dropdown
+                      DropdownButtonFormField<String>(
+                        value: _selectedCategory,
+                        decoration: const InputDecoration(
+                          labelText: 'Category',
+                        ),
+                        items:
+                            _categories.map((String category) {
+                              return DropdownMenuItem(
+                                value: category,
+                                child: Text(category),
+                              );
+                            }).toList(),
+                        onChanged:
+                            (value) =>
+                                setState(() => _selectedCategory = value),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // ElevatedButton(
+                      //   onPressed: () {
+                      //     if (_formKey.currentState!.validate()) {
+                      //       // Logic to save data goes here
+                      //       _submitData();
+                      //     }
+                      //   },
+                      //   child: const Text("Register"),
+                      // ),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            // Pass the current selection to the next screen
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => CategoryDetailsScreen(
+                                      name: _nameController.text,
+                                      mobile: _mobileController.text,
+                                      email:
+                                          _emailController.text, // PASS EMAIL
+                                      password:
+                                          _passwordController
+                                              .text, // PASS PASSWORD
+                                      category:
+                                          _selectedCategory!, // One of: Student, Business, Bank, Farmers
+                                      // --- ADD THESE NEW LINES ---
+                                      pincode: _pincodeController.text,
+                                      district: _districtController.text,
+                                      city: _cityController.text,
+                                      state: _stateController.text,
+                                    ),
+                              ),
+                            );
+                          }
+                        },
+                        child: const Text("Next"),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ],
+            ),
           ),
         ),
       ),
