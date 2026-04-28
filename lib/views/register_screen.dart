@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../controllers/registration_controller.dart';
 import '../widgets/custom_text_field.dart';
 import 'category_details_screen.dart';
+import '../data/india_data.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -20,13 +21,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   // New Address controllers
   final _pincodeController = TextEditingController();
-  final _cityController = TextEditingController();
+  final _cityController = TextEditingController(); // Used for manual 'Other' city
   final _stateController = TextEditingController();
   final _districtController = TextEditingController();
 
   final RegistrationController _controller = RegistrationController();
   String? _selectedCategory;
   final List<String> _categories = ['Student', 'Business', 'Bank', 'Farmers'];
+
+  String? _selectedState;
+  String? _selectedCity;
+
+  final Map<String, List<String>> _stateCityData = indiaStateCityData;
 
   // void _submitData() async {
   //   if (_formKey.currentState!.validate()) {
@@ -242,22 +248,61 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: CustomTextField(
-                            controller: _cityController,
-                            label: 'City',
-                            validator: (v) => v!.isEmpty ? "Enter City" : null,
+                          child: DropdownButtonFormField<String>(
+                            isExpanded: true,
+                            value: _selectedState,
+                            decoration: _dropdownDecoration('State', Icons.map_outlined),
+                            items: _stateCityData.keys.map((String state) {
+                              return DropdownMenuItem(
+                                value: state, 
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(state, style: const TextStyle(fontSize: 13))
+                                )
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedState = value;
+                                _selectedCity = null;
+                              });
+                            },
+                            validator: (v) => v == null ? "Select State" : null,
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 8),
                         Expanded(
-                          child: CustomTextField(
-                            controller: _stateController,
-                            label: 'State',
-                            validator: (v) => v!.isEmpty ? "Enter State" : null,
+                          child: DropdownButtonFormField<String>(
+                            isExpanded: true,
+                            value: _selectedCity,
+                            decoration: _dropdownDecoration('City', Icons.location_city_outlined),
+                            disabledHint: const Text("Select State"),
+                            items: _selectedState == null 
+                              ? [] 
+                              : [..._stateCityData[_selectedState]!, 'Other'].map((String city) {
+                                  return DropdownMenuItem(
+                                    value: city, 
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(city, style: const TextStyle(fontSize: 13))
+                                    )
+                                  );
+                                }).toList(),
+                            onChanged: (value) => setState(() => _selectedCity = value),
+                            validator: (v) => v == null ? "Select City" : null,
                           ),
                         ),
                       ],
                     ),
+                    if (_selectedCity == 'Other') ...[
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        controller: _cityController,
+                        label: 'Enter City Name',
+                        prefixIcon: Icons.edit_location_alt_outlined,
+                        validator: (v) => v!.isEmpty ? "Enter City Name" : null,
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     
                     DropdownButtonFormField<String>(
@@ -303,8 +348,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   category: _selectedCategory!,
                                   pincode: _pincodeController.text,
                                   district: _districtController.text,
-                                  city: _cityController.text,
-                                  state: _stateController.text,
+                                  city: _selectedCity == 'Other' ? _cityController.text : _selectedCity!,
+                                  state: _selectedState!,
                                 ),
                               ),
                             );
@@ -319,10 +364,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           elevation: 0,
                         ),
-                        child: const Row(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
+                            const Text(
                               "CONTINUE",
                               style: TextStyle(
                                 fontSize: 16,
@@ -330,8 +376,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 letterSpacing: 1.2,
                               ),
                             ),
-                            SizedBox(width: 8),
-                            Icon(Icons.arrow_forward, size: 18),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.arrow_forward, size: 18),
                           ],
                         ),
                       ),
@@ -343,6 +389,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  InputDecoration _dropdownDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: const Color(0xFFF26522), size: 20),
+      filled: true,
+      fillColor: Colors.grey.shade50,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.grey.shade200),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.grey.shade200),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Color(0xFFF26522), width: 1.5),
       ),
     );
   }

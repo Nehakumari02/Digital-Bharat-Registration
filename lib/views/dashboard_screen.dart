@@ -78,35 +78,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Welcome back,",
-                          style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 16),
-                        ),
-                        Text(
-                          widget.userData['name'] ?? "User",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Welcome back,",
+                            style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 16),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(20),
+                          Text(
+                            widget.userData['name'] ?? "User",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            maxLines: 1,
                           ),
-                          child: Text(
-                            "$category Portal",
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              "$category Portal",
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     const CircleAvatar(
                       radius: 25,
@@ -675,10 +679,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     child: Icon(icon, color: Colors.white, size: 24),
                   ),
-                  const Spacer(),
-                  Text(title, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 6),
-                  Text(subtitle, style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.2)),
+                   const Spacer(),
+                   Text(
+                     title, 
+                     style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                     maxLines: 1,
+                     overflow: TextOverflow.ellipsis,
+                   ),
+                   const SizedBox(height: 6),
+                   Text(
+                     subtitle, 
+                     style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.2),
+                     maxLines: 2,
+                     overflow: TextOverflow.ellipsis,
+                   ),
                 ],
               ),
             ),
@@ -746,14 +760,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
       children: [
         Icon(icon, color: const Color(0xFFF26522), size: 28),
         const SizedBox(height: 8),
-        Text(
-          count,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            count,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+          ),
         ),
         const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+          ),
         ),
       ],
     );
