@@ -6,8 +6,8 @@ import '../models/lead_model.dart';
 // --- SHARED UI HELPERS ---
 Widget _buildSectionTitle(String title) {
   return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 10),
-    child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF333333))),
+    padding: const EdgeInsets.only(bottom: 16, top: 10),
+    child: Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87, letterSpacing: -0.5)),
   );
 }
 
@@ -15,9 +15,15 @@ InputDecoration _inputStyle(String label, IconData icon) {
   return InputDecoration(
     labelText: label,
     prefixIcon: Icon(icon, color: const Color(0xFFF26522)),
-    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+    filled: true,
+    fillColor: Colors.grey.shade50,
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(color: Colors.grey.shade200),
+    ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(16),
       borderSide: const BorderSide(color: Color(0xFFF26522), width: 2),
     ),
   );
@@ -103,21 +109,39 @@ class EducationLoanForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Education Loan")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text("Education Loan", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _buildSectionTitle("Student Information"),
             TextField(decoration: _inputStyle("College/University Name", Icons.school)),
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
             TextField(decoration: _inputStyle("Course Name", Icons.book)),
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
             TextField(decoration: _inputStyle("Loan Amount Required", Icons.currency_rupee)),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-              child: const Text("SUBMIT LOAN REQUEST"),
+            const SizedBox(height: 40),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {},
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: const Color(0xFFF26522),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 5,
+                  shadowColor: const Color(0xFFF26522).withOpacity(0.5),
+                ),
+                child: const Text("SUBMIT REQUEST", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+              ),
             ),
           ],
         ),
@@ -134,23 +158,39 @@ class BusinessLoanForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Business Loan Application")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text("Business Loan", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionTitle("Loan Requirements"),
             TextField(decoration: _inputStyle("Required Amount", Icons.currency_rupee)),
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
             TextField(decoration: _inputStyle("Purpose of Loan", Icons.business_center)),
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
             TextField(decoration: _inputStyle("Tenure (in months)", Icons.calendar_today)),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-              child: const Text("SUBMIT APPLICATION"),
+            const SizedBox(height: 40),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {},
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: const Color(0xFFF26522),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 5,
+                  shadowColor: const Color(0xFFF26522).withOpacity(0.5),
+                ),
+                child: const Text("SUBMIT APPLICATION", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+              ),
             ),
           ],
         ),
@@ -165,23 +205,39 @@ class PostJobScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Post a New Job")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text("Post a New Job", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionTitle("Job Details"),
             TextField(decoration: _inputStyle("Job Title", Icons.work)),
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
             TextField(maxLines: 3, decoration: _inputStyle("Job Description", Icons.description)),
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
             TextField(decoration: _inputStyle("Salary Range", Icons.payments)),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-              child: const Text("POST JOB"),
+            const SizedBox(height: 40),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {},
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: const Color(0xFFF26522),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 5,
+                  shadowColor: const Color(0xFFF26522).withOpacity(0.5),
+                ),
+                child: const Text("POST JOB", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+              ),
             ),
           ],
         ),
@@ -255,24 +311,46 @@ class _CropRegistrationScreenState extends State<CropRegistrationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Register My Crop")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text("Register My Crop", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _buildSectionTitle("Crop Details"),
             Container(
               height: 150, width: double.infinity,
-              decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey)),
+              decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)),
               child: const Icon(Icons.add_a_photo, size: 50, color: Colors.grey),
             ),
             const SizedBox(height: 20),
             TextField(controller: _nameController, decoration: _inputStyle("Crop Name", Icons.grass)),
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
             TextField(controller: _priceController, decoration: _inputStyle("Price per Quintal", Icons.sell)),
-            const SizedBox(height: 30),
+            const SizedBox(height: 40),
             _isSaving
-                ? const CircularProgressIndicator()
-                : ElevatedButton(onPressed: _saveCrop, child: const Text("REGISTER CROP")),
+                ? const Center(child: CircularProgressIndicator())
+                : SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _saveCrop,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: const Color(0xFFF26522),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 5,
+                        shadowColor: const Color(0xFFF26522).withOpacity(0.5),
+                      ),
+                      child: const Text("REGISTER CROP", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                  ),
           ],
         ),
       ),
@@ -333,9 +411,16 @@ class _FarmerLoanFormState extends State<FarmerLoanForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Kisan Loan Application")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text("Kisan Loan Application", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
+        centerTitle: true,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -345,25 +430,34 @@ class _FarmerLoanFormState extends State<FarmerLoanForm> {
               decoration: _inputStyle("Land Size (in Acres)", Icons.landscape),
               keyboardType: TextInputType.number,
             ),
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
             TextField(
               controller: _khasraController,
               decoration: _inputStyle("Khasra/Khatauni Number", Icons.numbers),
             ),
-            const SizedBox(height: 15),
+            const SizedBox(height: 16),
             TextField(
               controller: _amountController,
               decoration: _inputStyle("Required Amount", Icons.currency_rupee),
               keyboardType: TextInputType.number,
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 40),
             _isSaving
                 ? const Center(child: CircularProgressIndicator())
-                : ElevatedButton(
-              onPressed: _applyForLoan,
-              style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-              child: const Text("APPLY FOR KCC LOAN"),
-            ),
+                : SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _applyForLoan,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: const Color(0xFFF26522),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 5,
+                        shadowColor: const Color(0xFFF26522).withOpacity(0.5),
+                      ),
+                      child: const Text("APPLY FOR KCC LOAN", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                  ),
           ],
         ),
       ),

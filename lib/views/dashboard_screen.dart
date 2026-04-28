@@ -138,11 +138,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildModernStat("2.1L+", "Registrations", Icons.group_add),
+                      Expanded(child: _buildModernStat("2.1L+", "Registered", Icons.group_add)),
                       _buildModernDivider(),
-                      _buildModernStat("6.9L+", "Users", Icons.public),
+                      Expanded(child: _buildModernStat("6.9L+", "Active Users", Icons.public)),
                       _buildModernDivider(),
-                      _buildModernStat("18K+", "Approved", Icons.verified),
+                      Expanded(child: _buildModernStat("18K+", "Approved", Icons.verified)),
                     ],
                   ),
                 ),
@@ -173,46 +173,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 
                 const SizedBox(height: 30),
-                if (category == 'Student') ...[
-                  _sectionTitle("Your Academic Journey"),
-                  _infoCard(Icons.school, "Scholarship Updates", "You have 2 new government scholarship alerts matching your profile.", Colors.blue),
-                  _infoCard(Icons.work, "Internship Openings", "5 new companies are hiring interns in your field.", Colors.orange),
-                  _infoCard(Icons.trending_up, "Skill Development", "New free courses available on Digital India platform.", Colors.green),
-                  const SizedBox(height: 10),
-                  _sectionTitle("Events & Deadlines"),
-                  _infoCard(Icons.calendar_today, "Application Deadline", "UPSC Prelims application ends in 3 days.", Colors.redAccent),
-                  _infoCard(Icons.group, "Mentorship Program", "Join the upcoming webinar on Career Guidance this Sunday.", Colors.deepPurple),
-                ],
-                if (category == 'Business') ...[
-                  _sectionTitle("Business Growth"),
-                  _infoCard(Icons.business_center, "MSME Loans", "Check your eligibility for collateral-free business loans up to 10 Lakhs.", Colors.blue),
-                  _infoCard(Icons.assignment, "Compliance Reminders", "GST filing deadline is approaching in 5 days.", Colors.orange),
-                  _infoCard(Icons.trending_up, "Market Insights", "Tech sector exports increased by 12% this quarter.", Colors.green),
-                  const SizedBox(height: 10),
-                  _sectionTitle("Networking & Opportunities"),
-                  _infoCard(Icons.handshake, "B2B Connect", "3 new leads matched with your business profile.", Colors.deepPurple),
-                  _infoCard(Icons.event, "Trade Fair 2026", "Register for the National Business Expo happening next month.", Colors.redAccent),
-                ],
-                if (category == 'Farmers') ...[
-                  _sectionTitle("Krishi Updates"),
-                  _infoCard(Icons.wb_sunny, "Weather Forecast", "Expected light rain in your district over the next 48 hours.", Colors.orange),
-                  _infoCard(Icons.trending_up, "Mandi Prices", "Wheat prices are up by 2% at your nearest APMC Mandi.", Colors.green),
-                  _infoCard(Icons.grass, "Govt Schemes", "PM-Kisan 12th installment will be credited soon.", Colors.blue),
-                  const SizedBox(height: 10),
-                  _sectionTitle("Resources & Support"),
-                  _infoCard(Icons.science, "Soil Testing", "Nearest soil health center is offering free checkups this week.", Colors.deepPurple),
-                  _infoCard(Icons.agriculture, "Equipment Subsidy", "Apply for 50% subsidy on new tractor purchases.", Colors.redAccent),
-                ],
-                if (category == 'Bank') ...[
-                  _sectionTitle("Banking Operations"),
-                  _infoCard(Icons.account_balance, "Lead Management", "You have 15 pending loan applications to review.", Colors.blue),
-                  _infoCard(Icons.security, "Regulatory Updates", "New KYC guidelines issued by RBI for digital lending.", Colors.redAccent),
-                  _infoCard(Icons.bar_chart, "Disbursement Target", "75% of your branch's agricultural loan target achieved.", Colors.green),
-                  const SizedBox(height: 10),
-                  _sectionTitle("Internal Communications"),
-                  _infoCard(Icons.policy, "Policy Circulars", "Read the latest internal circular on NPA recovery protocols.", Colors.deepPurple),
-                  _infoCard(Icons.support_agent, "Helpdesk Tickets", "3 support tickets from customers require your attention.", Colors.orange),
-                ],
+                _sectionTitle("Quick Actions"),
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.5,
+                  children: _getQuickActions(category),
+                ),
+                const SizedBox(height: 24),
+                _sectionTitle("Recent Updates"),
+                ..._getRecentUpdates(category),
                 const SizedBox(height: 30),
               ],
             ),
@@ -222,14 +195,162 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // --- DASHBOARD HELPERS ---
+  List<Widget> _getQuickActions(String category) {
+    if (category == 'Student') {
+      return [
+        _quickActionCard("Scholarships", Icons.school, Colors.blue, category),
+        _quickActionCard("Internships", Icons.work, Colors.orange, category),
+        _quickActionCard("E-Books", Icons.menu_book, Colors.green, category),
+        _quickActionCard("Skill Test", Icons.psychology, Colors.purple, category),
+      ];
+    } else if (category == 'Business') {
+      return [
+        _quickActionCard("MSME Loans", Icons.monetization_on, Colors.teal, category),
+        _quickActionCard("GST Portal", Icons.receipt_long, Colors.indigo, category),
+        _quickActionCard("Hiring", Icons.person_add, Colors.amber, category),
+        _quickActionCard("Market", Icons.analytics, Colors.deepOrange, category),
+      ];
+    } else if (category == 'Farmers') {
+      return [
+        _quickActionCard("Mandi Price", Icons.trending_up, Colors.green, category),
+        _quickActionCard("Weather", Icons.wb_sunny, Colors.blue, category),
+        _quickActionCard("Equipment", Icons.agriculture, Colors.brown, category),
+        _quickActionCard("Insurance", Icons.security, Colors.red, category),
+      ];
+    } else if (category == 'Bank') {
+      return [
+        _quickActionCard("All Leads", Icons.list_alt, Colors.blue, category),
+        _quickActionCard("Verification", Icons.verified_user, Colors.green, category),
+        _quickActionCard("Guidelines", Icons.gavel, Colors.purple, category),
+        _quickActionCard("Reports", Icons.assessment, Colors.orange, category),
+      ];
+    }
+    return [
+       _quickActionCard("Profile", Icons.person, Colors.blue, category),
+       _quickActionCard("Settings", Icons.settings, Colors.grey, category),
+       _quickActionCard("Support", Icons.help, Colors.orange, category),
+       _quickActionCard("Policy", Icons.description, Colors.teal, category),
+    ];
+  }
+
+  List<Widget> _getRecentUpdates(String category) {
+    if (category == 'Student') {
+      return [
+        _infoCard(Icons.campaign, "UPSC Application", "New notification for UPSC Prelims 2026 is out.", Colors.red),
+        _infoCard(Icons.star, "New Internship", "Google is hiring Summer Interns for 2026.", Colors.blue),
+      ];
+    } else if (category == 'Business') {
+      return [
+        _infoCard(Icons.notification_important, "GST Filing", "Monthly GST filing deadline is approaching.", Colors.orange),
+        _infoCard(Icons.rocket_launch, "StartUp Expo", "Join the upcoming Startup India Expo in Delhi.", Colors.purple),
+      ];
+    } else if (category == 'Farmers') {
+      return [
+        _infoCard(Icons.cloud_sync, "Heavy Rain Alert", "Isolated heavy rainfall expected in your region.", Colors.blue),
+        _infoCard(Icons.check_circle, "Subsidy Approved", "Your tractor subsidy application has been approved.", Colors.green),
+      ];
+    } else if (category == 'Bank') {
+      return [
+        _infoCard(Icons.warning_amber, "RBI Guideline", "New circular regarding digital lending security.", Colors.red),
+        _infoCard(Icons.people, "New Lead", "5 new loan applications pending for your branch.", Colors.blue),
+      ];
+    }
+    return [
+      _infoCard(Icons.info_outline, "Welcome", "Welcome to the Digital Registration Portal.", Colors.blue),
+    ];
+  }
+
+  Widget _quickActionCard(String title, IconData icon, Color color, String category) {
+    return GestureDetector(
+      onTap: () => _showDetailDialog(title, "Access all your $title related services and documents here. This portal provides a streamlined experience for $category users.", icon, color),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(color: Colors.grey.shade100),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // --- TAB 2: SERVICES (Fixed Navigation Calls) ---
   Widget _buildServicesTab(String category) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Digital Services"), centerTitle: true),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _sectionTitle("Available for $category"),
+      backgroundColor: Colors.grey.shade50,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 200.0,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: const Color(0xFFF26522),
+            flexibleSpace: FlexibleSpaceBar(
+              titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+              title: const Text("Digital Services", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22)),
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFF26522), Color(0xFFFDB913)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    Positioned(
+                      right: -30,
+                      top: -10,
+                      child: Icon(Icons.dashboard_customize, size: 140, color: Colors.white.withOpacity(0.15)),
+                    ),
+                    const Positioned(
+                      left: 20,
+                      bottom: 60,
+                      child: Text(
+                        "Explore specific programs\nand applications",
+                        style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500, height: 1.4),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _sectionTitle("Available for $category"),
+                  const SizedBox(height: 10),
 
           // --- STUDENT ---
           if (category == 'Student') ...[
@@ -337,6 +458,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               context,
             ),
           ],
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -739,40 +864,112 @@ class _DashboardScreenState extends State<DashboardScreen> {
     Widget destination,
     BuildContext context,
   ) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: ListTile(
-        leading: Icon(icon, color: const Color(0xFFF26522)),
-        title: Text(title),
-        subtitle: Text(sub),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => destination),
-          );
-        },
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => destination),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.08),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF26522).withOpacity(0.12),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(icon, color: const Color(0xFFF26522), size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87)),
+                  const SizedBox(height: 4),
+                  Text(sub, style: TextStyle(fontSize: 13, color: Colors.grey.shade600, height: 1.2)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFFF26522)),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _statusCard(String title, String status) {
     return Container(
-      padding: const EdgeInsets.all(15),
+      margin: const EdgeInsets.only(top: 10, bottom: 20),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.green),
+        gradient: LinearGradient(
+          colors: [Colors.green.shade400, Colors.green.shade700],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withOpacity(0.4),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title),
-          Text(
-            status,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.green,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.verified, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Text(title, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              status.toUpperCase(),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+                fontSize: 12,
+              ),
             ),
           ),
         ],

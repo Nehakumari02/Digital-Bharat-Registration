@@ -115,164 +115,233 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Register")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text(
+          "Create Account",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      CustomTextField(
-                        controller: _nameController,
-                        label: 'Full Name',
-                        validator: (v) => v!.isEmpty ? "Enter Name" : null,
-                      ),
-                      const SizedBox(height: 10),
+        child: Column(
+          children: [
+            // Top Branding / Progress
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF26522).withOpacity(0.05),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
+                ),
+              ),
+              child: Column(
+                children: [
+                  const CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Color(0xFFF26522),
+                    child: Icon(Icons.person_add_alt_1, color: Colors.white, size: 30),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Step 1 of 2",
+                    style: TextStyle(
+                      color: Color(0xFFF26522),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    "Basic Information",
+                    style: TextStyle(
+                      color: Colors.black54,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-                      // --- EMAIL FIELD ---
-                      CustomTextField(
-                        controller: _emailController,
-                        label: 'Email Address',
-                        keyboardType: TextInputType.emailAddress,
-                        validator:
-                            (v) =>
-                                !v!.contains('@')
-                                    ? "Enter a valid email"
-                                    : null,
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Personal Details",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
                       ),
-                      const SizedBox(height: 10),
-
-                      // --- PASSWORD FIELD ---
-                      CustomTextField(
-                        controller: _passwordController,
-                        label: 'Password',
-                        obscureText: true,
-                        validator:
-                            (v) =>
-                                v!.length < 6
-                                    ? "Password must be 6+ characters"
-                                    : null,
+                    ),
+                    const SizedBox(height: 20),
+                    CustomTextField(
+                      controller: _nameController,
+                      label: 'Full Name',
+                      prefixIcon: Icons.person_outline,
+                      validator: (v) => v!.isEmpty ? "Enter Name" : null,
+                    ),
+                    const SizedBox(height: 16),
+                    CustomTextField(
+                      controller: _emailController,
+                      label: 'Email Address',
+                      prefixIcon: Icons.mail_outline,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (v) => !v!.contains('@') ? "Enter a valid email" : null,
+                    ),
+                    const SizedBox(height: 16),
+                    CustomTextField(
+                      controller: _mobileController,
+                      label: 'Mobile Number',
+                      prefixIcon: Icons.phone_android_outlined,
+                      keyboardType: TextInputType.phone,
+                      validator: (v) => v!.length < 10 ? "Enter valid mobile" : null,
+                    ),
+                    const SizedBox(height: 16),
+                    CustomTextField(
+                      controller: _passwordController,
+                      label: 'Password',
+                      prefixIcon: Icons.lock_outline,
+                      obscureText: true,
+                      validator: (v) => v!.length < 6 ? "Password must be 6+ characters" : null,
+                    ),
+                    
+                    const SizedBox(height: 32),
+                    const Text(
+                      "Address & Category",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
                       ),
-                      const SizedBox(height: 10),
-                      CustomTextField(
-                        controller: _mobileController,
-                        label: 'Mobile Number',
-                        keyboardType: TextInputType.phone,
-                        validator:
-                            (v) => v!.length < 10 ? "Enter valid mobile" : null,
-                      ),
-                      const SizedBox(height: 10),
-
-                      // Inside the Form -> Column
-                      CustomTextField(
-                        controller: _pincodeController,
-                        label: 'Pincode',
-                        keyboardType: TextInputType.number,
-                        validator:
-                            (v) =>
-                                v!.length != 6 ? "Enter 6-digit pincode" : null,
-                      ),
-                      const SizedBox(height: 10),
-
-                      CustomTextField(
-                        controller: _districtController,
-                        label: 'District',
-                        validator: (v) => v!.isEmpty ? "Enter District" : null,
-                      ),
-                      const SizedBox(height: 10),
-
-                      Row(
-                        children: [
-                          Expanded(
-                            child: CustomTextField(
-                              controller: _cityController,
-                              label: 'City',
-                              validator:
-                                  (v) => v!.isEmpty ? "Enter City" : null,
-                            ),
+                    ),
+                    const SizedBox(height: 20),
+                    CustomTextField(
+                      controller: _pincodeController,
+                      label: 'Pincode',
+                      prefixIcon: Icons.pin_drop_outlined,
+                      keyboardType: TextInputType.number,
+                      validator: (v) => v!.length != 6 ? "Enter 6-digit pincode" : null,
+                    ),
+                    const SizedBox(height: 16),
+                    CustomTextField(
+                      controller: _districtController,
+                      label: 'District',
+                      prefixIcon: Icons.location_city_outlined,
+                      validator: (v) => v!.isEmpty ? "Enter District" : null,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: CustomTextField(
+                            controller: _cityController,
+                            label: 'City',
+                            validator: (v) => v!.isEmpty ? "Enter City" : null,
                           ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: CustomTextField(
-                              controller: _stateController,
-                              label: 'State',
-                              validator:
-                                  (v) => v!.isEmpty ? "Enter State" : null,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      // Category Dropdown
-                      DropdownButtonFormField<String>(
-                        value: _selectedCategory,
-                        decoration: const InputDecoration(
-                          labelText: 'Category',
                         ),
-                        items:
-                            _categories.map((String category) {
-                              return DropdownMenuItem(
-                                value: category,
-                                child: Text(category),
-                              );
-                            }).toList(),
-                        onChanged:
-                            (value) =>
-                                setState(() => _selectedCategory = value),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: CustomTextField(
+                            controller: _stateController,
+                            label: 'State',
+                            validator: (v) => v!.isEmpty ? "Enter State" : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    DropdownButtonFormField<String>(
+                      value: _selectedCategory,
+                      decoration: InputDecoration(
+                        labelText: 'Category',
+                        prefixIcon: const Icon(Icons.category_outlined, color: Color(0xFFF26522), size: 20),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade200),
+                        ),
                       ),
-                      const SizedBox(height: 20),
-
-                      // ElevatedButton(
-                      //   onPressed: () {
-                      //     if (_formKey.currentState!.validate()) {
-                      //       // Logic to save data goes here
-                      //       _submitData();
-                      //     }
-                      //   },
-                      //   child: const Text("Register"),
-                      // ),
-                      ElevatedButton(
+                      items: _categories.map((String category) {
+                        return DropdownMenuItem(
+                          value: category,
+                          child: Text(category),
+                        );
+                      }).toList(),
+                      onChanged: (value) => setState(() => _selectedCategory = value),
+                      validator: (v) => v == null ? "Select Category" : null,
+                    ),
+                    
+                    const SizedBox(height: 40),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
                         onPressed: () {
                           if (_formKey.currentState!.validate()) {
-                            // Pass the current selection to the next screen
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder:
-                                    (context) => CategoryDetailsScreen(
-                                      name: _nameController.text,
-                                      mobile: _mobileController.text,
-                                      email:
-                                          _emailController.text, // PASS EMAIL
-                                      password:
-                                          _passwordController
-                                              .text, // PASS PASSWORD
-                                      category:
-                                          _selectedCategory!, // One of: Student, Business, Bank, Farmers
-                                      // --- ADD THESE NEW LINES ---
-                                      pincode: _pincodeController.text,
-                                      district: _districtController.text,
-                                      city: _cityController.text,
-                                      state: _stateController.text,
-                                    ),
+                                builder: (context) => CategoryDetailsScreen(
+                                  name: _nameController.text,
+                                  mobile: _mobileController.text,
+                                  email: _emailController.text,
+                                  password: _passwordController.text,
+                                  category: _selectedCategory!,
+                                  pincode: _pincodeController.text,
+                                  district: _districtController.text,
+                                  city: _cityController.text,
+                                  state: _stateController.text,
+                                ),
                               ),
                             );
                           }
                         },
-                        child: const Text("Next"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF26522),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "CONTINUE",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_forward, size: 18),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 40),
+                  ],
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
