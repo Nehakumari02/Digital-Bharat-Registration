@@ -31,31 +31,124 @@ InputDecoration _inputStyle(String label, IconData icon) {
 
 // --- 1. STUDENT SERVICES ---
 
-class InternshipScreen extends StatelessWidget {
-  const InternshipScreen({super.key});
+class InternshipScreen extends StatefulWidget {
+  final Map<String, dynamic> userData;
+  const InternshipScreen({super.key, required this.userData});
+
+  @override
+  State<InternshipScreen> createState() => _InternshipScreenState();
+}
+
+class _InternshipScreenState extends State<InternshipScreen> {
+  bool _isApplying = false;
+  late Future<List<dynamic>> _jobsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _jobsFuture = ServiceController().fetchJobs();
+  }
+
+  void _applyForJob(int jobId, String title) async {
+    setState(() => _isApplying = true);
+
+    final payload = {
+      "user_id": widget.userData['id'],
+      "type": "job_apply",
+      "data": {
+        "job_id": jobId,
+      }
+    };
+
+    bool success = await ServiceController().submitData(payload);
+
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Applied for $title successfully!")));
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to apply or already applied.")));
+    }
+    setState(() => _isApplying = false);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, String>> jobs = [
-      {"title": "Web Developer Intern", "company": "Tech Solutions", "stipend": "₹10,000"},
-      {"title": "Graphic Designer", "company": "Creative Hub", "stipend": "₹8,000"},
-    ];
-
     return Scaffold(
-      appBar: AppBar(title: const Text("Available Internships")),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: jobs.length,
-        itemBuilder: (context, index) {
-          return Card(
-            child: ListTile(
-              leading: const Icon(Icons.laptop_mac, color: Color(0xFFF26522)),
-              title: Text(jobs[index]['title']!, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(jobs[index]['company']!),
-              trailing: Text(jobs[index]['stipend']!, style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+      backgroundColor: Colors.grey.shade50,
+      appBar: AppBar(
+        title: const Text("Available Internships", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
+        centerTitle: true,
+      ),
+      body: Stack(
+        children: [
+          FutureBuilder<List<dynamic>>(
+            future: _jobsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text("Error: ${snapshot.error}"));
+              }
+              final jobs = snapshot.data ?? [];
+              if (jobs.isEmpty) {
+                return const Center(child: Text("No internships available right now."));
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: jobs.length,
+                itemBuilder: (context, index) {
+                  final job = jobs[index];
+                  return Card(
+                    elevation: 2,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      leading: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(color: const Color(0xFFF26522).withOpacity(0.1), shape: BoxShape.circle),
+                        child: const Icon(Icons.laptop_mac, color: Color(0xFFF26522)),
+                      ),
+                      title: Text(job['job_title'] ?? "Unknown Title", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      subtitle: Text(job['company_name'] ?? "Unknown Company", style: TextStyle(color: Colors.grey.shade600)),
+                      trailing: SizedBox(
+                        width: 80,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              job['salary_range']?.toString() ?? "N/A", 
+                              style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const Text("Apply Now", style: TextStyle(color: Color(0xFFF26522), fontSize: 11, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                      onTap: _isApplying ? null : () {
+                        final id = job['id'];
+                        if (id != null) {
+                          _applyForJob(int.parse(id.toString()), job['job_title']?.toString() ?? "Internship");
+                        }
+                      },
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+          if (_isApplying)
+            Container(
+              color: Colors.black26,
+              child: const Center(child: CircularProgressIndicator()),
             ),
-          );
-        },
+        ],
       ),
     );
   }
@@ -103,8 +196,48 @@ class ScholarshipScreen extends StatelessWidget {
   }
 }
 
-class EducationLoanForm extends StatelessWidget {
-  const EducationLoanForm({super.key});
+class EducationLoanForm extends StatefulWidget {
+  final Map<String, dynamic> userData;
+  const EducationLoanForm({super.key, required this.userData});
+
+  @override
+  State<EducationLoanForm> createState() => _EducationLoanFormState();
+}
+
+class _EducationLoanFormState extends State<EducationLoanForm> {
+  final _collegeController = TextEditingController();
+  final _courseController = TextEditingController();
+  final _amountController = TextEditingController();
+  bool _isSaving = false;
+
+  void _submitForm() async {
+    if (_collegeController.text.isEmpty || _courseController.text.isEmpty || _amountController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please fill all fields")));
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    final payload = {
+      "user_id": widget.userData['id'],
+      "type": "edu_loan",
+      "data": {
+        "college_name": _collegeController.text,
+        "course_name": _courseController.text,
+        "amount": _amountController.text,
+      }
+    };
+
+    bool success = await ServiceController().submitData(payload);
+
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Education Loan Application Submitted!")));
+      Navigator.pop(context);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Submission failed. Check your connection.")));
+    }
+    setState(() => _isSaving = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -123,26 +256,28 @@ class EducationLoanForm extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionTitle("Student Information"),
-            TextField(decoration: _inputStyle("College/University Name", Icons.school)),
+            TextField(controller: _collegeController, decoration: _inputStyle("College/University Name", Icons.school)),
             const SizedBox(height: 16),
-            TextField(decoration: _inputStyle("Course Name", Icons.book)),
+            TextField(controller: _courseController, decoration: _inputStyle("Course Name", Icons.book)),
             const SizedBox(height: 16),
-            TextField(decoration: _inputStyle("Loan Amount Required", Icons.currency_rupee)),
+            TextField(controller: _amountController, decoration: _inputStyle("Loan Amount Required", Icons.currency_rupee), keyboardType: TextInputType.number),
             const SizedBox(height: 40),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: const Color(0xFFF26522),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 5,
-                  shadowColor: const Color(0xFFF26522).withOpacity(0.5),
+            _isSaving 
+              ? const Center(child: CircularProgressIndicator())
+              : SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _submitForm,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: const Color(0xFFF26522),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 5,
+                      shadowColor: const Color(0xFFF26522).withOpacity(0.5),
+                    ),
+                    child: const Text("SUBMIT REQUEST", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
                 ),
-                child: const Text("SUBMIT REQUEST", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-              ),
-            ),
           ],
         ),
       ),
@@ -152,8 +287,48 @@ class EducationLoanForm extends StatelessWidget {
 
 // --- 2. BUSINESS SERVICES ---
 
-class BusinessLoanForm extends StatelessWidget {
-  const BusinessLoanForm({super.key});
+class BusinessLoanForm extends StatefulWidget {
+  final Map<String, dynamic> userData;
+  const BusinessLoanForm({super.key, required this.userData});
+
+  @override
+  State<BusinessLoanForm> createState() => _BusinessLoanFormState();
+}
+
+class _BusinessLoanFormState extends State<BusinessLoanForm> {
+  final _amountController = TextEditingController();
+  final _purposeController = TextEditingController();
+  final _tenureController = TextEditingController();
+  bool _isSaving = false;
+
+  void _submitForm() async {
+    if (_amountController.text.isEmpty || _purposeController.text.isEmpty || _tenureController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please fill all fields")));
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    final payload = {
+      "user_id": widget.userData['id'],
+      "type": "biz_loan", 
+      "data": {
+        "amount": _amountController.text,
+        "purpose": _purposeController.text,
+        "tenure": _tenureController.text,
+      }
+    };
+
+    bool success = await ServiceController().submitData(payload);
+
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Business Loan Application Submitted!")));
+      Navigator.pop(context);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Submission failed. Check your connection.")));
+    }
+    setState(() => _isSaving = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -172,26 +347,28 @@ class BusinessLoanForm extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionTitle("Loan Requirements"),
-            TextField(decoration: _inputStyle("Required Amount", Icons.currency_rupee)),
+            TextField(controller: _amountController, decoration: _inputStyle("Required Amount", Icons.currency_rupee), keyboardType: TextInputType.number),
             const SizedBox(height: 16),
-            TextField(decoration: _inputStyle("Purpose of Loan", Icons.business_center)),
+            TextField(controller: _purposeController, decoration: _inputStyle("Purpose of Loan", Icons.business_center)),
             const SizedBox(height: 16),
-            TextField(decoration: _inputStyle("Tenure (in months)", Icons.calendar_today)),
+            TextField(controller: _tenureController, decoration: _inputStyle("Tenure (in months)", Icons.calendar_today), keyboardType: TextInputType.number),
             const SizedBox(height: 40),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: const Color(0xFFF26522),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 5,
-                  shadowColor: const Color(0xFFF26522).withOpacity(0.5),
+            _isSaving
+              ? const Center(child: CircularProgressIndicator())
+              : SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _submitForm,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: const Color(0xFFF26522),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 5,
+                      shadowColor: const Color(0xFFF26522).withOpacity(0.5),
+                    ),
+                    child: const Text("SUBMIT APPLICATION", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
                 ),
-                child: const Text("SUBMIT APPLICATION", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-              ),
-            ),
           ],
         ),
       ),
@@ -199,8 +376,48 @@ class BusinessLoanForm extends StatelessWidget {
   }
 }
 
-class PostJobScreen extends StatelessWidget {
-  const PostJobScreen({super.key});
+class PostJobScreen extends StatefulWidget {
+  final Map<String, dynamic> userData;
+  const PostJobScreen({super.key, required this.userData});
+
+  @override
+  State<PostJobScreen> createState() => _PostJobScreenState();
+}
+
+class _PostJobScreenState extends State<PostJobScreen> {
+  final _titleController = TextEditingController();
+  final _descController = TextEditingController();
+  final _salaryController = TextEditingController();
+  bool _isSaving = false;
+
+  void _submitForm() async {
+    if (_titleController.text.isEmpty || _descController.text.isEmpty || _salaryController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please fill all fields")));
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    final payload = {
+      "user_id": widget.userData['id'],
+      "type": "job_post",
+      "data": {
+        "job_title": _titleController.text,
+        "description": _descController.text,
+        "salary_range": _salaryController.text,
+      }
+    };
+
+    bool success = await ServiceController().submitData(payload);
+
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Job Posted Successfully!")));
+      Navigator.pop(context);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to post job. Check connection.")));
+    }
+    setState(() => _isSaving = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -219,26 +436,28 @@ class PostJobScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionTitle("Job Details"),
-            TextField(decoration: _inputStyle("Job Title", Icons.work)),
+            TextField(controller: _titleController, decoration: _inputStyle("Job Title", Icons.work)),
             const SizedBox(height: 16),
-            TextField(maxLines: 3, decoration: _inputStyle("Job Description", Icons.description)),
+            TextField(controller: _descController, maxLines: 3, decoration: _inputStyle("Job Description", Icons.description)),
             const SizedBox(height: 16),
-            TextField(decoration: _inputStyle("Salary Range", Icons.payments)),
+            TextField(controller: _salaryController, decoration: _inputStyle("Salary Range", Icons.payments)),
             const SizedBox(height: 40),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: const Color(0xFFF26522),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 5,
-                  shadowColor: const Color(0xFFF26522).withOpacity(0.5),
+            _isSaving 
+              ? const Center(child: CircularProgressIndicator())
+              : SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _submitForm,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: const Color(0xFFF26522),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 5,
+                      shadowColor: const Color(0xFFF26522).withOpacity(0.5),
+                    ),
+                    child: const Text("POST JOB", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
                 ),
-                child: const Text("POST JOB", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-              ),
-            ),
           ],
         ),
       ),
@@ -265,9 +484,9 @@ class ApplicantsScreen extends StatelessWidget {
           return Card(
             child: ListTile(
               leading: const CircleAvatar(backgroundColor: Color(0xFFF26522), child: Icon(Icons.person, color: Colors.white)),
-              title: Text(applicants[index]['name']!, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(applicants[index]['course']!),
-              trailing: Text(applicants[index]['status']!, style: const TextStyle(color: Colors.blue)),
+              title: Text(applicants[index]['name'] ?? "Unknown", style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(applicants[index]['course'] ?? "N/A"),
+              trailing: Text(applicants[index]['status'] ?? "Pending", style: const TextStyle(color: Colors.blue)),
             ),
           );
         },
@@ -531,9 +750,9 @@ class SubsidyScreen extends StatelessWidget {
 // --- 4. BANK SERVICES ---
 
 class AllLeadsScreen extends StatefulWidget {
-  final int currentBankUserId; // Pass this from your login/session
-  const AllLeadsScreen({super.key,required this.currentBankUserId});
-
+  final int currentBankUserId; 
+  final String? filterType; // Optional filter (biz_loan, edu_loan, kisan_loan)
+  const AllLeadsScreen({super.key, required this.currentBankUserId, this.filterType});
 
   @override
   State<AllLeadsScreen> createState() => _AllLeadsScreenState();
@@ -541,12 +760,13 @@ class AllLeadsScreen extends StatefulWidget {
 
 class _AllLeadsScreenState extends State<AllLeadsScreen> {
   final LeadController _leadController = LeadController();
+  int? _overrideId; // For debugging
 
   Key _refreshKey = UniqueKey(); // Used to force refresh the list
 
   void _handleClaim(int id) async {
-    // 1. Call the API
-    bool success = await _leadController.updateLeadStatus(id, "Approved",widget.currentBankUserId);
+    final int effectiveId = _overrideId ?? widget.currentBankUserId;
+    bool success = await _leadController.updateLeadStatus(id, "Approved", effectiveId);
 
     if (success && mounted) {
       // 2. Only if the API returned true, update the UI
@@ -565,42 +785,103 @@ class _AllLeadsScreenState extends State<AllLeadsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final int effectiveId = _overrideId ?? widget.currentBankUserId;
+
+    String title = "Loan Applications";
+    if (widget.filterType == "Job Posting") title = "Business Loans";
+    if (widget.filterType == "Education Loan") title = "Student Loans";
+    if (widget.filterType == "Farmer Loan") title = "Farmer Loans";
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Loan Applications (Leads)")),
+      appBar: AppBar(
+        title: Text(title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => setState(() => _refreshKey = UniqueKey()),
+          )
+        ],
+      ),
       body: FutureBuilder<List<LeadModel>>(
         key: _refreshKey,
-        future: _leadController.fetchAllLeads(widget.currentBankUserId),
+        future: _leadController.fetchAllLeads(effectiveId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError)
-            return Center(child: Text("Error: ${snapshot.error}"));
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Error: ${snapshot.error.toString().replaceAll('Exception:', '')}",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () => setState(() => _overrideId = 1),
+                      child: const Text("Try with Test ID (1)"),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
 
-          final leads = snapshot.data ?? [];
+          List<LeadModel> leads = snapshot.data ?? [];
 
-          // --- ADD THIS CHECK ---
+          // Apply client-side filter if filterType is provided
+          final String? filter = widget.filterType;
+          /* 
+          // TEMPORARILY DISABLED FILTERING TO DEBUG DATA VISIBILITY
+          if (filter != null) {
+            leads = leads.where((l) => l.loanType.trim().toLowerCase() == filter.trim().toLowerCase()).toList();
+          }
+          */
+
+          // --- ADD DEBUG INFO ---
+          final String debugInfo = "User ID: $effectiveId\nFilter: ${filter ?? 'None'}\nURL: ${LeadController.baseUrl}/leads?bank_user_id=$effectiveId";
+          debugPrint(debugInfo);
+
           if (leads.isEmpty) {
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.location_off_outlined, size: 64, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "No leads available for you",
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.w500,
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)),
+                      child: Text(debugInfo, style: const TextStyle(fontSize: 11, color: Colors.blueGrey, fontFamily: 'Courier')),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    "There are no farmers within 100km of your location.",
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
+                    const SizedBox(height: 20),
+                    Icon(Icons.location_off_outlined, size: 64, color: Colors.grey[400]),
+                    const SizedBox(height: 16),
+                    const Text(
+                      "No leads available",
+                      style: TextStyle(fontSize: 18, color: Colors.grey, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Check back later for new requests.",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 24),
+                    if (effectiveId != 1)
+                      ElevatedButton(
+                        onPressed: () => setState(() => _overrideId = 1),
+                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF26522)),
+                        child: const Text("Switch to Test ID (1)", style: TextStyle(color: Colors.white)),
+                      ),
+                  ],
+                ),
               ),
             );
           }
@@ -608,6 +889,7 @@ class _AllLeadsScreenState extends State<AllLeadsScreen> {
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: leads.length,
+            shrinkWrap: true, // Safety for layout issues
             itemBuilder: (context, index) {
               final lead = leads[index];
               return _leadItem(lead);
@@ -622,22 +904,54 @@ class _AllLeadsScreenState extends State<AllLeadsScreen> {
     // Check if the status is already approved or claimed
     bool isClaimed = lead.status.toLowerCase() == "approved" || lead.status.toLowerCase() == "claimed";
 
+    String displayType = lead.loanType;
+    if (displayType == "Job Posting") displayType = "Business";
+    if (displayType == "Education Loan") displayType = "Student";
+    if (displayType == "Farmer Loan") displayType = "Farmer";
+
     return Card(
+      elevation: 2,
       margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        title: Text(
-            lead.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+        contentPadding: const EdgeInsets.all(16),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(child: Text(lead.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
+            Text(lead.amount, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFF26522))),
+          ],
+        ),
         subtitle: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("${lead.loanType} • ${lead.amount}"),
-            const SizedBox(height: 4),
-            Text(
-              isClaimed ? "APPROVED" : lead.status.toUpperCase(),
-              style: TextStyle(
-                  fontSize: 12,
-                  color: isClaimed ? Colors.green : Colors.orange,
-                  fontWeight: FontWeight.bold
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.category, size: 14, color: Colors.grey.shade600),
+                const SizedBox(width: 4),
+                Text(displayType, style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w500)),
+                const SizedBox(width: 12),
+                Icon(Icons.phone, size: 14, color: Colors.grey.shade600),
+                const SizedBox(width: 4),
+                Text(lead.mobile, style: TextStyle(color: Colors.grey.shade700)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: isClaimed ? Colors.green.shade50 : Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                isClaimed ? "APPROVED" : lead.status.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isClaimed ? Colors.green.shade700 : Colors.orange.shade700,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -695,7 +1009,14 @@ class _AcceptedLeadsScreenState extends State<AcceptedLeadsScreen> {
               return ListTile(
                 leading: const Icon(Icons.verified, color: Colors.green),
                 title: Text(leads[index].name),
-                subtitle: Text(leads[index].mobile),
+                subtitle: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(leads[index].mobile),
+                    Text(leads[index].loanType, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
                 trailing: Text(
                   leads[index].amount,
                   style: const TextStyle(
