@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import '../widgets/custom_text_field.dart';
+import '../constants/registration_plan.dart';
 import '../controllers/registration_controller.dart';
+import '../widgets/custom_text_field.dart';
+import '../widgets/responsive_layout.dart';
+import 'registration_success_sheet.dart';
 
 
-// --- THIS IS THE CLASS YOU ARE MISSING ---
 class CategoryDetailsScreen extends StatefulWidget {
   final String name;
   final String mobile;
@@ -14,63 +16,67 @@ class CategoryDetailsScreen extends StatefulWidget {
   final String district;
   final String city;
   final String state;
+  final String registrationType;
+  final String? referredPartnerCode;
+  final String? referredPartnerMobile;
 
   const CategoryDetailsScreen({
     super.key,
     required this.name,
     required this.mobile,
-    required this.email,    // Add this
-    required this.password, // Add this
+    required this.email,
+    required this.password,
     required this.category,
     required this.pincode,
     required this.district,
     required this.city,
     required this.state,
+    this.registrationType = RegistrationPlan.typeNormal,
+    this.referredPartnerCode,
+    this.referredPartnerMobile,
   });
 
   @override
   State<CategoryDetailsScreen> createState() => _CategoryDetailsScreenState();
 }
 
-// --- THIS IS THE CLASS YOU ALREADY HAVE ---
 class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
   final _standardController = TextEditingController();
   final _collegeController = TextEditingController();
   final _gpaController = TextEditingController();
-  final _genericExtraController = TextEditingController();
 
-  // New Student Controllers
   final _rollNumberController = TextEditingController();
   final _streamController = TextEditingController();
   final _gradYearController = TextEditingController();
   final _skillsController = TextEditingController();
 
-  // New Business Controllers
-  // Existing Business Controllers
   final _companyNameController = TextEditingController();
   final _gstController = TextEditingController();
   final _turnoverController = TextEditingController();
   final _employeeCountController = TextEditingController();
   final _websiteController = TextEditingController();
-  final _establishmentYearController = TextEditingController();
 
-  // --- NEW BANK CONTROLLERS ---
   final _bankNameController = TextEditingController();
   final _interestRateController = TextEditingController();
   final _branchController = TextEditingController();
   final _ifscController = TextEditingController();
 
-  // --- NEW FARMER CONTROLLERS ---
   final _cropNameController = TextEditingController();
   final _cropPriceController = TextEditingController();
-  final _landSizeController = TextEditingController(); // Common extra info for farmers
+  final _landSizeController = TextEditingController();
 
-  // 1. ADD THIS LINE: Define the controller
+  final _highestEducationController = TextEditingController();
+  final _experienceController = TextEditingController();
+  final _preferredRoleController = TextEditingController();
+
   final RegistrationController _controller = RegistrationController();
+  bool _paymentAcknowledged = false;
+  bool _submitting = false;
 
-  // ... (Keep your existing TextEditingControllers here) ...
+  int get _registrationFee => RegistrationPlan.feeForType(widget.registrationType);
 
-  // 2. ADD THIS METHOD: Put this at the very bottom of the class
+  bool get _isPartner => widget.registrationType == RegistrationPlan.typePartner;
+
   void _showMessage(String msg, Color color) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -82,9 +88,13 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
     );
   }
 
-  void _submitData() async {
-    // Collect all data into a single Map to send to the Model/API
-    Map<String, dynamic> allData = {
+  Future<void> _submitData() async {
+    if (!_paymentAcknowledged) {
+      _showMessage('Please confirm the registration fee payment', Colors.orange);
+      return;
+    }
+
+    Map<String, dynamic> profile = {
       "name": widget.name,
       "mobile": widget.mobile,
       "email": widget.email,
@@ -96,9 +106,8 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
       "state": widget.state,
     };
 
-    // Add category-specific fields based on selection
     if (widget.category == 'Student') {
-      allData.addAll({
+      profile.addAll({
         "college_name": _collegeController.text,
         "standard_year": _standardController.text,
         "stream": _streamController.text,
@@ -108,60 +117,93 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
         "skills": _skillsController.text,
       });
     } else if (widget.category == 'Business') {
-      allData.addAll({
+      profile.addAll({
         "company_name": _companyNameController.text,
         "gst_number": _gstController.text,
         "turnover": _turnoverController.text,
         "employee_count": _employeeCountController.text,
         "business_website": _websiteController.text,
       });
-    } else if (widget.category == 'Bank') {
-      allData.addAll({
+    } else if (widget.category == 'Bank' || widget.category == 'Banking / Financial Services') {
+      profile.addAll({
         "bank_name": _bankNameController.text,
         "interest_rate": _interestRateController.text,
         "branch_name": _branchController.text,
         "ifsc_code": _ifscController.text,
       });
     } else if (widget.category == 'Farmers') {
-      allData.addAll({
+      profile.addAll({
         "crop_name": _cropNameController.text,
         "crop_price": _cropPriceController.text,
         "land_size": _landSizeController.text,
       });
+    } else if (widget.category == 'Job Seeker') {
+      profile.addAll({
+        "highest_education": _highestEducationController.text,
+        "years_of_experience": _experienceController.text,
+        "preferred_job_role": _preferredRoleController.text,
+      });
     }
 
-    try {
-      // Send the map to your controller
-      // Make sure your RegistrationController.registerUser can accept this map!
-      final response = await _controller.registerUser(allData);
+    // Add common partner/payment fields
+    profile.addAll({
+      "registration_type": widget.registrationType,
+      "is_partner": _isPartner ? 1 : 0,
+      "registration_fee": _registrationFee,
+      "referred_partner_code": widget.referredPartnerCode,
+      "wallet_balance": 0,
+    });
 
-      if (response.statusCode == 201) {
-        _showMessage("Registration Successful!", Colors.green);
-        if (mounted) {
-          // Go back to the very first screen (Login/Welcome)
-          Navigator.of(context).popUntil((route) => route.isFirst);
-        }
+    if (widget.referredPartnerMobile != null &&
+        widget.referredPartnerMobile!.trim().isNotEmpty) {
+      profile['referred_partner_mobile'] = widget.referredPartnerMobile!.trim();
+      profile['partner_mobile'] = widget.referredPartnerMobile!.trim();
+    }
+
+    final payload = RegistrationController.buildPayload(
+      profile: profile,
+      registrationType: widget.registrationType,
+      referredPartnerCode: widget.referredPartnerCode,
+      paymentAcknowledged: _paymentAcknowledged,
+    );
+
+    setState(() => _submitting = true);
+    try {
+      final result = await _controller.registerUser(payload);
+
+      if (!mounted) return;
+
+      if (result.success) {
+        showRegistrationSuccessSheet(
+          context,
+          result: result,
+          registrationType: widget.registrationType,
+        );
       } else {
-        _showMessage("Error: ${response.statusCode}", Colors.red);
+        _showMessage(result.message ?? 'Registration failed', Colors.red);
       }
     } catch (e) {
       _showMessage("Could not connect to server.", Colors.red);
+    } finally {
+      if (mounted) setState(() => _submitting = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("${widget.category} Information")),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Text("Complete your profile as a ${widget.category}",
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      appBar: AppBar(title: Text("${widget.category} · Step 2")),
+      body: ResponsiveScrollBody(
+        maxWidth: 640,
+        children: [
+            _feeSummaryCard(),
+            const SizedBox(height: 16),
+            Text(
+              "Complete your profile as a ${widget.category}",
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 20),
 
-            // DYNAMIC FIELDS
             if (widget.category == 'Student') ...[
               CustomTextField(controller: _collegeController, label: "College Name"),
               const SizedBox(height: 15),
@@ -197,14 +239,11 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
               ),
             ],
 
-            // --- BUSINESS FIELDS ---
             if (widget.category == 'Business') ...[
               CustomTextField(controller: _companyNameController, label: "Company Name"),
               const SizedBox(height: 15),
               CustomTextField(controller: _gstController, label: "GST Number"),
               const SizedBox(height: 15),
-
-              // New Fields
               CustomTextField(
                 controller: _turnoverController,
                 label: "Annual Turnover (in Lakhs)",
@@ -223,8 +262,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
               ),
             ],
 
-            // --- NEW BANK FIELDS ---
-            if (widget.category == 'Bank') ...[
+            if (widget.category == 'Bank' || widget.category == 'Banking / Financial Services') ...[
               CustomTextField(controller: _bankNameController, label: "Bank Name"),
               const SizedBox(height: 15),
               CustomTextField(
@@ -238,7 +276,6 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
               CustomTextField(controller: _ifscController, label: "IFSC Code"),
             ],
 
-            // --- NEW FARMER FIELDS ---
             if (widget.category == 'Farmers') ...[
               CustomTextField(
                   controller: _cropNameController,
@@ -258,18 +295,85 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
               ),
             ],
 
-            const SizedBox(height: 30),
-
-            ElevatedButton(
-              onPressed: () {
-                print("Final Submit for: ${widget.name}");
-                _submitData();
-              },
-              style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-              child: const Text("Final Submit"),
+            const SizedBox(height: 24),
+            CheckboxListTile(
+              value: _paymentAcknowledged,
+              onChanged: (v) => setState(() => _paymentAcknowledged = v ?? false),
+              activeColor: const Color(0xFF2196F3),
+              title: Text(
+                'I agree to pay ${RegistrationPlan.feeLabel(_registrationFee)} registration fee'
+                '${_isPartner ? ' (Partner plan)' : ''}',
+              ),
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: EdgeInsets.zero,
             ),
-          ],
-        ),
+            if (!_isPartner && widget.referredPartnerCode != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Partner code ${widget.referredPartnerCode} applied — partner earns '
+                '₹${RegistrationPlan.cashbackForNormalRegistration().toStringAsFixed(0)} (10%) in wallet.',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+              ),
+            ],
+            if (_isPartner) ...[
+              const SizedBox(height: 8),
+              Text(
+                'After payment you will receive your unique partner code to share with referrals.',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+              ),
+            ],
+
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _submitting ? null : _submitData,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2196F3),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(50),
+                ),
+                child: _submitting
+                    ? const SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : Text('Pay ${RegistrationPlan.feeLabel(_registrationFee)} & Register'),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _feeSummaryCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2196F3).withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF2196F3).withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _isPartner ? 'Partner registration' : 'Normal registration',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Fee: ${RegistrationPlan.feeLabel(_registrationFee)}',
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF2196F3)),
+          ),
+          if (_isPartner)
+            const Text(
+              'Includes your partner code & referral wallet.',
+              style: TextStyle(fontSize: 13),
+            ),
+        ],
       ),
     );
   }

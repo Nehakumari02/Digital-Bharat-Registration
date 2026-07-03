@@ -1,29 +1,33 @@
 import 'package:flutter/material.dart';
 import '../../widgets/admin_widgets.dart';
+import '../../widgets/responsive_layout.dart';
 import 'manage_users_screen.dart';
+import 'farmer_insurance_leads_screen.dart';
+import 'subsidy_leads_screen.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final desktop = Responsive.isDesktop(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB),
       appBar: AppBar(
-        title: const Text("Admin Console", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+        title: Text("Admin Console", style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.search_rounded, color: Colors.black87),
+            icon: Icon(Icons.search_rounded, color: Theme.of(context).colorScheme.onSurface),
             onPressed: () {},
           ),
           Stack(
             alignment: Alignment.center,
             children: [
               IconButton(
-                icon: const Icon(Icons.notifications_none_rounded, color: Colors.black87),
+                icon: Icon(Icons.notifications_none_rounded, color: Theme.of(context).colorScheme.onSurface),
                 onPressed: () {},
               ),
               Positioned(
@@ -40,20 +44,18 @@ class AdminDashboardScreen extends StatelessWidget {
           const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
+      body: ResponsiveScrollBody(
+        maxWidth: Responsive.contentMaxWidth,
+        children: [
+            Text(
               "System Overview",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
             ),
             const SizedBox(height: 20),
             
             // Stats Grid
             GridView.count(
-              crossAxisCount: 2,
+              crossAxisCount: desktop ? 4 : 2,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 16,
@@ -153,9 +155,50 @@ class AdminDashboardScreen extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const FarmerInsuranceLeadsScreen(),
+                        ),
+                      );
+                    },
+                    child: _quickManageButton(
+                      context,
+                      "Farmer Insurance",
+                      Icons.security_rounded,
+                      Colors.green,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SubsidyLeadsScreen(),
+                        ),
+                      );
+                    },
+                    child: _quickManageButton(
+                      context,
+                      "Subsidies",
+                      Icons.account_balance_wallet_rounded,
+                      Color(0xFF2196F3),
+                    ),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 40),
-          ],
-        ),
+        ],
       ),
     );
   }

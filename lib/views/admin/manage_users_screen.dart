@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/responsive_layout.dart';
 
 class ManageUsersScreen extends StatefulWidget {
   const ManageUsersScreen({super.key});
@@ -20,14 +21,13 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Manage Users", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
+        title: Text("Manage Users", style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold)),
         elevation: 0.5,
-        foregroundColor: Colors.black87,
       ),
-      body: Column(
+      body: ResponsiveBody(
+        maxWidth: 900,
+        child: Column(
         children: [
           // Filter Row
           Padding(
@@ -52,10 +52,10 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF26522).withOpacity(0.1),
+                    color: const Color(0xFF2196F3).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.filter_list, color: Color(0xFFF26522)),
+                  child: const Icon(Icons.filter_list, color: Color(0xFF2196F3)),
                 ),
               ],
             ),
@@ -72,6 +72,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
             ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -86,7 +87,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
@@ -103,8 +104,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
             children: [
               CircleAvatar(
                 radius: 24,
-                backgroundColor: const Color(0xFFF26522).withOpacity(0.1),
-                child: Text(user['name']![0], style: const TextStyle(color: Color(0xFFF26522), fontWeight: FontWeight.bold)),
+                backgroundColor: const Color(0xFF2196F3).withOpacity(0.1),
+                child: Text(user['name']![0], style: const TextStyle(color: Color(0xFF2196F3), fontWeight: FontWeight.bold)),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -141,7 +142,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
             children: [
               Text(
                 "Category: ${user['category']}",
-                style: const TextStyle(color: Colors.black54, fontSize: 12),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), fontSize: 12),
               ),
               Row(
                 children: [

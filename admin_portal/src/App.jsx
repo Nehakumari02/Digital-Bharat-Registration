@@ -42,13 +42,24 @@ const MOCK_DATA = [
   { name: 'Sun', users: 349 },
 ]
 
+const CATEGORIES = {
+  loans: ['Farmer Loan', 'Education Loan', 'Business Loan'],
+  business_services: ['MSME Registration', 'GST Registration', 'Company Firm Registration', 'Shop Act License', 'Marketing Support'],
+  digital_banking: ['Jan Dhan Account', 'Online Banking', 'UPI Payments', 'Direct Benefit Transfer']
+}
+
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('admin_authenticated') === 'true')
+  const [loginId, setLoginId] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
+
   const [activeTab, setActiveTab] = useState('dashboard')
   const [users, setUsers] = useState([])
+  const [allRegistrations, setAllRegistrations] = useState([])
   const [stats, setStats] = useState({ total: 0, approved: 0, pending: 0, growth: '0%' })
   const [loading, setLoading] = useState(true)
   const [apiUrl, setApiUrl] = useState(localStorage.getItem('admin_api_url') || 'http://localhost:8000/api')
-  const [bankerId, setBankerId] = useState(localStorage.getItem('admin_banker_id') || '1')
   const [connectionStatus, setConnectionStatus] = useState('checking')
   
   // New Management State
@@ -67,14 +78,14 @@ function App() {
 
   useEffect(() => {
     fetchData()
-  }, [apiUrl, bankerId])
+  }, [apiUrl])
 
   const fetchData = async () => {
     try {
       setLoading(true)
       setConnectionStatus('checking')
       
-      const statsRes = await fetch(`${apiUrl}/dashboard-stats?bank_user_id=${bankerId}`)
+      const statsRes = await fetch(`${apiUrl}/dashboard-stats`)
       if (statsRes.ok) {
         const statsData = await statsRes.json()
         setStats({
@@ -85,7 +96,7 @@ function App() {
         })
       }
 
-      const usersRes = await fetch(`${apiUrl}/leads?bank_user_id=${bankerId}`)
+      const usersRes = await fetch(`${apiUrl}/leads`)
       if (usersRes.ok) {
         const leadsData = await usersRes.json()
         const mappedUsers = leadsData.map(lead => ({
@@ -98,6 +109,40 @@ function App() {
           date: lead.created_at ? new Date(lead.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : "Today"
         }))
         setUsers(mappedUsers)
+        
+        let newActivities = [];
+        try {
+          const regRes = await fetch(`${apiUrl}/registrations`)
+          if (regRes.ok) {
+            const regData = await regRes.json()
+            setAllRegistrations(regData)
+            regData.forEach(r => {
+              newActivities.push({
+                id: `reg_${r.id}`,
+                type: 'registration',
+                text: `New user joined: ${r.name}`,
+                time: r.created_at ? new Date(r.created_at).toLocaleDateString() : 'Recent',
+                rawDate: r.created_at ? new Date(r.created_at).getTime() : 0
+              });
+            });
+          }
+        } catch (e) {
+          console.warn("Failed to fetch all registrations", e)
+        }
+        
+        mappedUsers.forEach(u => {
+          newActivities.push({
+            id: `lead_${u.id}`,
+            type: u.status === 'Approved' ? 'approval' : 'system',
+            text: `${u.service} form by ${u.name}`,
+            time: u.date,
+            rawDate: u.created_at ? new Date(u.created_at).getTime() : 0
+          });
+        });
+        
+        newActivities.sort((a, b) => b.rawDate - a.rawDate);
+        setActivities(newActivities.slice(0, 5));
+        
         setConnectionStatus('online')
       } else {
         throw new Error('Backend not reachable')
@@ -128,7 +173,6 @@ function App() {
         body: JSON.stringify({
           id: updatedData.id,
           status: updatedData.status,
-          bank_user_id: bankerId,
           table: updatedData.table_name
         })
       })
@@ -182,9 +226,66 @@ function App() {
   const filteredUsers = users.filter(u => {
     const matchesSearch = u.name.toLowerCase().includes(searchQuery.toLowerCase()) || u.mobile.includes(searchQuery);
     const matchesStatus = statusFilter === 'All' || u.status === statusFilter;
-    const matchesService = serviceFilter === 'All' || u.service === serviceFilter;
+    
+    let matchesService = false;
+    if (['loans', 'business_services', 'digital_banking'].includes(activeTab)) {
+      if (serviceFilter === 'All') {
+        matchesService = CATEGORIES[activeTab].includes(u.service);
+      } else {
+        matchesService = u.service === serviceFilter;
+      }
+    } else {
+      matchesService = serviceFilter === 'All' || u.service === serviceFilter;
+    }
+
     return matchesSearch && matchesStatus && matchesService;
   });
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (loginId === 'admin' && loginPassword === 'admin123') {
+      setIsAuthenticated(true);
+      localStorage.setItem('admin_authenticated', 'true');
+      setLoginError('');
+    } else {
+      setLoginError('Invalid ID or Password');
+    }
+  }
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('admin_authenticated');
+    setLoginId('');
+    setLoginPassword('');
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg)', color: 'white' }}>
+        <div className="glass-card" style={{ padding: '40px', width: '100%', maxWidth: '400px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, var(--primary), #fdb913)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 16px rgba(242, 101, 34, 0.3)' }}>
+              <Shield size={24} color="white" />
+            </div>
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold' }}>Admin Console</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '8px' }}>Sign in to Digital Bharat</p>
+          </div>
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', color: 'var(--text-muted)' }}>Admin ID</label>
+              <input type="text" value={loginId} onChange={(e) => setLoginId(e.target.value)} style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '8px', color: 'white', outline: 'none' }} placeholder="Enter ID" required />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', color: 'var(--text-muted)' }}>Password</label>
+              <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '8px', color: 'white', outline: 'none' }} placeholder="Enter Password" required />
+            </div>
+            {loginError && <p style={{ color: '#ef4444', fontSize: '13px', textAlign: 'center' }}>{loginError}</p>}
+            <button type="submit" className="btn-primary" style={{ width: '100%', padding: '14px', marginTop: '8px', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold' }}>Login</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   const serviceStats = users.reduce((acc, u) => {
     acc[u.service] = (acc[u.service] || 0) + 1;
@@ -224,62 +325,53 @@ function App() {
 
         <nav style={{ flex: 1 }}>
           <SidebarLink icon={<LayoutDashboard size={20} />} label="Command Center" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
+          <SidebarLink icon={<Users size={20} />} label="All Registered Users" active={activeTab === 'allRegistrations'} onClick={() => setActiveTab('allRegistrations')} />
           
-          <div style={{ marginTop: '32px', marginBottom: '12px', padding: '0 8px', fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '1px' }}>SERVICE LEADS</div>
-          
-          <SidebarLink 
-            icon={<Leaf size={20} />} 
-            label="Crop Registry" 
-            active={activeTab === 'users' && serviceFilter === 'Crop Registration'} 
-            onClick={() => {
-              setServiceFilter('Crop Registration');
-              setActiveTab('users');
-            }} 
-          />
+          <div style={{ marginTop: '32px', marginBottom: '12px', padding: '0 8px', fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '1px' }}>CATEGORIES</div>
           
           <SidebarLink 
             icon={<CreditCard size={20} />} 
             label="Loan Center" 
-            active={activeTab === 'users' && (serviceFilter.includes('Loan') && serviceFilter !== 'Crop Registration')} 
+            active={activeTab === 'loans'} 
             onClick={() => {
-              setServiceFilter('Farmer Loan'); // Default to Farmer Loan in the hub
-              setActiveTab('users');
+              setServiceFilter('All');
+              setActiveTab('loans');
             }} 
           />
           
           <SidebarLink 
             icon={<Briefcase size={20} />} 
-            label="Job Postings" 
-            active={activeTab === 'users' && serviceFilter === 'Job Posting'} 
+            label="Business Services" 
+            active={activeTab === 'business_services'} 
             onClick={() => {
-              setServiceFilter('Job Posting');
-              setActiveTab('users');
+              setServiceFilter('All');
+              setActiveTab('business_services');
             }} 
           />
           
           <SidebarLink 
-            icon={<UserCheck size={20} />} 
-            label="Internship Apps" 
-            active={activeTab === 'users' && serviceFilter === 'Job Application'} 
+            icon={<Shield size={20} />} 
+            label="Digital Banking" 
+            active={activeTab === 'digital_banking'} 
             onClick={() => {
-              setServiceFilter('Job Application');
-              setActiveTab('users');
+              setServiceFilter('All');
+              setActiveTab('digital_banking');
             }} 
           />
-
+          
           <div style={{ marginTop: '32px', marginBottom: '12px', padding: '0 8px', fontSize: '10px', color: 'var(--text-muted)', fontWeight: '700', letterSpacing: '1px' }}>MANAGEMENT</div>
           
           <SidebarLink icon={<Grid size={20} />} label="Service Engine" active={activeTab === 'services'} onClick={() => setActiveTab('services')} />
           <SidebarLink icon={<Bell size={20} />} label="Broadcasts" active={activeTab === 'notifications'} onClick={() => setActiveTab('notifications')} />
           <SidebarLink icon={<Settings size={20} />} label="Configuration" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+          <SidebarLink icon={<LogOut size={20} />} label="Logout" onClick={handleLogout} />
         </nav>
 
-        <div className="glass-card" style={{ padding: '16px', marginTop: 'auto' }}>
+        <div className="glass-card sidebar-status no-hover" style={{ padding: '16px', marginTop: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: connectionStatus === 'online' ? '#22c55e' : '#ef4444' }}></div>
             <p style={{ fontSize: '12px', fontWeight: '600' }}>System: {connectionStatus.toUpperCase()}</p>
           </div>
-          <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Banker ID: {bankerId}</p>
         </div>
       </aside>
 
@@ -382,18 +474,74 @@ function App() {
           </>
         )}
 
-        {activeTab === 'users' && (
+        {activeTab === 'allRegistrations' && (
           <div className="glass-card" style={{ padding: '32px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '600' }}>User Registry ({filteredUsers.length})</h3>
+                <h3 style={{ fontSize: '18px', fontWeight: '600' }}>All Registered Users ({allRegistrations.length})</h3>
+              </div>
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
+                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500', fontSize: '14px' }}>NAME</th>
+                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500', fontSize: '14px' }}>MOBILE</th>
+                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500', fontSize: '14px' }}>EMAIL</th>
+                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500', fontSize: '14px' }}>LOCATION</th>
+                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500', fontSize: '14px' }}>CATEGORY</th>
+                  <th style={{ padding: '16px', color: 'var(--text-muted)', fontWeight: '500', fontSize: '14px' }}>DATE</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allRegistrations.map((user, idx) => (
+                  <tr key={user.id || idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <td style={{ padding: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                          {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: '500' }}>{user.name}</div>
+                          {user.partner_code && <div style={{ fontSize: '11px', color: 'var(--primary)' }}>Partner: {user.partner_code}</div>}
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '16px', color: 'var(--text-muted)' }}>{user.mobile}</td>
+                    <td style={{ padding: '16px', color: 'var(--text-muted)' }}>{user.email}</td>
+                    <td style={{ padding: '16px', color: 'var(--text-muted)' }}>{`${user.city || ''}, ${user.state || ''}`.trim() || 'N/A'}</td>
+                    <td style={{ padding: '16px' }}><span style={{ padding: '4px 8px', borderRadius: '12px', background: 'rgba(255,255,255,0.1)', fontSize: '12px' }}>{user.category || 'User'}</span></td>
+                    <td style={{ padding: '16px', color: 'var(--text-muted)' }}>{user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</td>
+                  </tr>
+                ))}
+                {allRegistrations.length === 0 && (
+                  <tr>
+                    <td colSpan="6" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                      No registered users found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {['loans', 'business_services', 'digital_banking'].includes(activeTab) && (
+          <div className="glass-card" style={{ padding: '32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: '600' }}>
+                  {activeTab === 'loans' && 'Loan Center'}
+                  {activeTab === 'business_services' && 'Business Services'}
+                  {activeTab === 'digital_banking' && 'Digital Banking'}
+                  {' '}({filteredUsers.length})
+                </h3>
                 <select 
                   value={serviceFilter}
                   onChange={(e) => setServiceFilter(e.target.value)}
                   style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid var(--border)', padding: '4px 12px', borderRadius: '8px', outline: 'none' }}
                 >
                   <option value="All">All Services</option>
-                  {Object.keys(serviceStats).map(s => (
+                  {CATEGORIES[activeTab].map(s => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
@@ -467,8 +615,12 @@ function App() {
                     className="btn-primary" 
                     style={{ padding: '8px 16px', fontSize: '13px' }}
                     onClick={() => {
+                      let targetTab = 'loans';
+                      if (CATEGORIES.business_services.includes(name)) targetTab = 'business_services';
+                      else if (CATEGORIES.digital_banking.includes(name)) targetTab = 'digital_banking';
+                      
                       setServiceFilter(name);
-                      setActiveTab('users');
+                      setActiveTab(targetTab);
                     }}
                   >
                     Manage
@@ -507,26 +659,11 @@ function App() {
                   }} 
                 />
               </div>
-              <div style={{ marginBottom: '24px' }}>
-                <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '8px' }}>Banker Profile ID</p>
-                <input 
-                  type="text" 
-                  value={bankerId} 
-                  onChange={(e) => setBankerId(e.target.value)}
-                  placeholder="e.g. 1"
-                  style={{ 
-                    width: '100%',
-                    background: 'rgba(255,255,255,0.05)', 
-                    border: '1px solid var(--border)', 
-                    color: 'white', 
-                    padding: '10px 16px', 
-                    borderRadius: '12px',
-                    outline: 'none'
-                  }} 
-                />
-              </div>
               <button 
-                onClick={() => handleApiChange(apiUrl, bankerId)}
+                onClick={() => {
+                  localStorage.setItem('admin_api_url', apiUrl);
+                  fetchData();
+                }}
                 className="btn-primary" 
                 style={{ width: '100%', padding: '12px' }}
               >
@@ -578,10 +715,31 @@ function App() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   {Object.entries(selectedUser).map(([key, value]) => {
                     if (['id', 'name', 'status', 'date'].includes(key)) return null;
+                    
+                    // Parse JSON fields (details, extra_data) into individual items
+                    if ((key === 'details' || key === 'extra_data') && value) {
+                      let parsed = null;
+                      try {
+                        parsed = typeof value === 'string' ? JSON.parse(value) : value;
+                      } catch(e) { parsed = null; }
+                      
+                      if (parsed && typeof parsed === 'object') {
+                        return Object.entries(parsed).map(([subKey, subVal]) => {
+                          if (subVal === null || subVal === '' || subVal === 'null') return null;
+                          return (
+                            <div key={`${key}_${subKey}`} style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                              <p style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>{subKey.replace(/_/g, ' ')}</p>
+                              <p style={{ fontSize: '13px', fontWeight: '500' }}>{String(subVal)}</p>
+                            </div>
+                          );
+                        });
+                      }
+                    }
+                    
                     return (
                       <div key={key} style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                        <p style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>{key.replace('_', ' ')}</p>
-                        <p style={{ fontSize: '13px', fontWeight: '500' }}>{value || 'N/A'}</p>
+                        <p style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>{key.replace(/_/g, ' ')}</p>
+                        <p style={{ fontSize: '13px', fontWeight: '500' }}>{typeof value === 'object' ? JSON.stringify(value) : (value || 'N/A')}</p>
                       </div>
                     );
                   })}

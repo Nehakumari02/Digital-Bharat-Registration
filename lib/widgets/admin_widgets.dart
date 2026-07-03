@@ -21,7 +21,7 @@ class AdminStatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -61,7 +61,7 @@ class AdminStatCard extends StatelessWidget {
           const SizedBox(height: 20),
           Text(
             value,
-            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87),
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
           ),
           const SizedBox(height: 4),
           Text(
@@ -87,12 +87,12 @@ class AdminSectionTitle extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
         ),
         if (onSeeAll != null)
           TextButton(
             onPressed: onSeeAll,
-            child: const Text("See All", style: TextStyle(color: Color(0xFFF26522))),
+            child: const Text("See All", style: TextStyle(color: Color(0xFF2196F3))),
           ),
       ],
     );
@@ -119,15 +119,15 @@ class UserActivityTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.grey.shade100),
       ),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: const Color(0xFFF26522).withOpacity(0.1),
-            child: Text(name[0], style: const TextStyle(color: Color(0xFFF26522), fontWeight: FontWeight.bold)),
+            backgroundColor: const Color(0xFF2196F3).withOpacity(0.1),
+            child: Text(name[0], style: const TextStyle(color: Color(0xFF2196F3), fontWeight: FontWeight.bold)),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -136,7 +136,7 @@ class UserActivityTile extends StatelessWidget {
               children: [
                 RichText(
                   text: TextSpan(
-                    style: const TextStyle(color: Colors.black87, fontSize: 14),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
                     children: [
                       TextSpan(text: name, style: const TextStyle(fontWeight: FontWeight.bold)),
                       TextSpan(text: " $action "),

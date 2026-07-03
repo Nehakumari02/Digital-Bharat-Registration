@@ -20,7 +20,7 @@ class LeadCard extends StatelessWidget {
         trailing: Text(
           lead.amount,
           style: const TextStyle(
-            color: Color(0xFFF26522),
+            color: Color(0xFF2196F3),
             fontWeight: FontWeight.bold,
           ),
         ),

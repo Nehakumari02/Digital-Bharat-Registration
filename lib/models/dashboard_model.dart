@@ -35,7 +35,7 @@ class Announcement {
     return Announcement(
       title: json['title'] ?? 'Announcement',
       subtitle: json['subtitle'] ?? '',
-      colorHex: json['color'] ?? '0xFFF26522',
+      colorHex: json['color'] ?? '0xFF2196F3',
       iconName: json['icon'] ?? 'announcement',
     );
   }
@@ -58,7 +58,7 @@ class FeedItem {
     return FeedItem(
       title: json['title'] ?? 'Update',
       subtitle: json['subtitle'] ?? '',
-      colorHex: json['color'] ?? '0xFFF26522',
+      colorHex: json['color'] ?? '0xFF2196F3',
       iconName: json['icon'] ?? 'info',
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:the_digital_registration/widgets/responsive_layout.dart';
 
 class SecurityScreen extends StatefulWidget {
   const SecurityScreen({super.key});
@@ -18,10 +19,9 @@ class _SecurityScreenState extends State<SecurityScreen> {
         title: const Text("Security"),
         centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
+      body: ResponsiveScrollBody(
         children: [
-          const Text("Login & Security", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFF26522))),
+          const Text("Login & Security", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2196F3))),
           const SizedBox(height: 10),
           ListTile(
             leading: const Icon(Icons.password),
@@ -35,7 +35,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
             title: const Text("Biometric Authentication"),
             subtitle: const Text("Use fingerprint or face ID to login"),
             value: _biometricEnabled,
-            activeColor: const Color(0xFFF26522),
+            activeColor: const Color(0xFF2196F3),
             onChanged: (bool value) {
               setState(() {
                 _biometricEnabled = value;
@@ -47,7 +47,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
             title: const Text("Two-Factor Authentication"),
             subtitle: const Text("Require an OTP to login to new devices"),
             value: _twoFactorEnabled,
-            activeColor: const Color(0xFFF26522),
+            activeColor: const Color(0xFF2196F3),
             onChanged: (bool value) {
               setState(() {
                 _twoFactorEnabled = value;
@@ -55,7 +55,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
             },
           ),
           const Divider(height: 30),
-          const Text("Device Management", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFF26522))),
+          const Text("Device Management", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2196F3))),
           const SizedBox(height: 10),
           ListTile(
             leading: const Icon(Icons.devices),
@@ -74,33 +74,31 @@ class _SecurityScreenState extends State<SecurityScreen> {
   void _showPasswordDialog() {
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Change Password"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              TextField(decoration: InputDecoration(labelText: "Current Password"), obscureText: true),
-              SizedBox(height: 10),
-              TextField(decoration: InputDecoration(labelText: "New Password"), obscureText: true),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF26522), foregroundColor: Colors.white),
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Password updated successfully!")));
-              },
-              child: const Text("Save"),
-            ),
+      builder: (context) => AlertDialog(
+        title: const Text("Change Password"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            TextField(decoration: InputDecoration(labelText: "Current Password"), obscureText: true),
+            SizedBox(height: 10),
+            TextField(decoration: InputDecoration(labelText: "New Password"), obscureText: true),
           ],
-        );
-      },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2196F3), foregroundColor: Colors.white),
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Password updated successfully!")));
+            },
+            child: const Text("Save"),
+          ),
+        ],
+      ),
     );
   }
 }

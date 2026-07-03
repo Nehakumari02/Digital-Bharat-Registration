@@ -1,16 +1,10 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter/foundation.dart'; // Required for kIsWeb
+import '../config/api_config.dart';
 import '../models/dashboard_model.dart';
 
 class DashboardController {
-  static String get _baseUrl {
-    if (kIsWeb) {
-      return 'http://127.0.0.1:8000/api';
-    } else {
-      return 'http://10.0.2.2:8000/api';
-    }
-  }
+  static String get _baseUrl => ApiConfig.baseUrl;
 
   Future<DashboardStats> fetchDashboardStats() async {
     try {
