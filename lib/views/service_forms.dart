@@ -2671,11 +2671,10 @@ class _CropRegistrationScreenState extends State<CropRegistrationScreen> {
                 keyboardType: TextInputType.number,
                 validator: (v) => _requiredDecimal(v, 'Enter valid acres'),
               ),
-              const SizedBox(height: 4),
-              Text('Land tenure', style: TextStyle(color: Colors.grey.shade800)),
+              const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 value: _landTenure,
-                decoration: _inputStyle(context, 'Select', Icons.handshake),
+                decoration: _inputStyle(context, 'Land tenure', Icons.handshake),
                 items: const [
                   DropdownMenuItem(value: 'Own', child: Text('Own')),
                   DropdownMenuItem(value: 'Lease', child: Text('Lease')),
@@ -2703,8 +2702,7 @@ class _CropRegistrationScreenState extends State<CropRegistrationScreen> {
                 icon: Icons.eco,
                 validator: _req,
               ),
-              const SizedBox(height: 4),
-              Text('Season', style: TextStyle(color: Colors.grey.shade800)),
+              const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 value: _season,
                 decoration: _inputStyle(context, 'Season', Icons.calendar_month),
@@ -2744,11 +2742,10 @@ class _CropRegistrationScreenState extends State<CropRegistrationScreen> {
                 keyboardType: TextInputType.number,
                 validator: (v) => _requiredDecimal(v, 'Enter valid acres'),
               ),
-              const SizedBox(height: 4),
-              Text('Primary irrigation', style: TextStyle(color: Colors.grey.shade800)),
+              const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 value: _irrigationSource,
-                decoration: _inputStyle(context, 'Irrigation', Icons.water),
+                decoration: _inputStyle(context, 'Primary irrigation', Icons.water),
                 items: const [
                   DropdownMenuItem(
                     value: 'Tubewell / borewell',
@@ -3044,8 +3041,8 @@ class _FarmerLoanFormState extends State<FarmerLoanForm> {
         "district": _district.text.trim(),
         "state": _state.text.trim(),
         "pincode": _pincode.text.trim(),
-        "land_size_acres": _landSizeController.text.trim(),
-        "khasra_khatauni": _khasraController.text.trim(),
+        "land_size": _landSizeController.text.trim().isEmpty ? "0" : _landSizeController.text.trim(),
+        "khasra_number": _khasraController.text.trim().isEmpty ? "N/A" : _khasraController.text.trim(),
         "khata_number": _khataNumber.text.trim(),
         "survey_number": _surveyNumber.text.trim(),
         "ownership_type": _ownershipType.text.trim(),

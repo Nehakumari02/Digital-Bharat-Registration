@@ -561,11 +561,10 @@ class _InternshipApplicationScreenState
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text('Work mode preference', style: TextStyle(color: Colors.grey.shade800)),
+              const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 value: _workMode,
-                decoration: _dec('Work mode', Icons.work_outline),
+                decoration: _dec('Work mode preference', Icons.work_outline),
                 items: const [
                   DropdownMenuItem(value: 'On-site', child: Text('On-site')),
                   DropdownMenuItem(value: 'Hybrid', child: Text('Hybrid')),

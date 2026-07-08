@@ -627,37 +627,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             context,
                           ),
                         ]
-                      : category == 'Bank'
-                      ? [
-                          _serviceCard(
-                            Icons.account_balance,
-                            "Online Banking",
-                            "Apply for internet banking",
-                            OnlineBankingScreen(userData: widget.userData),
-                            context,
-                          ),
-                          _serviceCard(
-                            Icons.qr_code_scanner,
-                            "UPI Payments",
-                            "Register UPI merchant",
-                            UpiPaymentScreen(userData: widget.userData),
-                            context,
-                          ),
-                          _serviceCard(
-                            Icons.sync_alt,
-                            "Direct Benefit Transfer",
-                            "Link Aadhaar for DBT",
-                            DirectBenefitTransferScreen(userData: widget.userData),
-                            context,
-                          ),
-                          _serviceCard(
-                            Icons.people_outline,
-                            "Jan Dhan Yojna",
-                            "Open zero-balance account",
-                            JanDhanYojnaScreen(userData: widget.userData),
-                            context,
-                          ),
-                        ]
                       : category == 'Farmers'
                       ? [
                           _serviceCard(
@@ -699,7 +668,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             context,
                           ),
                         ]
-                      : category == 'Bank'
+                      : (category == 'Bank' || category == 'Banking / Financial Services')
                       ? (() {
                           final rawId = widget.userData['id'];
                           final int bankId = rawId != null
@@ -1392,7 +1361,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       height: desktop ? 280 : 200,
       slides: [
         HomeCarouselSlide(
-          imageAsset: category == 'Business' ? HomeImages.businessBanner : (category == 'Student' ? HomeImages.studentBanner : HomeImages.banner),
+          imageAsset: category == 'Business' ? HomeImages.businessBanner : (category == 'Student' ? HomeImages.studentBanner : (category == 'Farmers' ? HomeImages.farmerBanner : ((category == 'Bank' || category == 'Banking / Financial Services') ? HomeImages.bankBanner : HomeImages.banner))),
           badge: isPartner ? 'PARTNER PROGRAM' : '$category Portal',
           title: isPartner
               ? 'Earn ₹${cashback.toStringAsFixed(0)} on every referral'
@@ -1446,24 +1415,84 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     onTap: () => _handleQuickAction(category, "Hiring"),
                   ),
                 ]
-              : [
-                  FeaturedImageItem(
-                    label: 'Digital Services',
-                    imageAsset: HomeImages.services,
-                    onTap: () => setState(() => _selectedIndex = 1),
-                  ),
-                  FeaturedImageItem(
-                    label: '$category Hub',
-                    imageAsset: HomeImages.business,
-                    onTap: () {
-                      if (category == 'Job Seeker') {
+              : category == 'Farmers'
+                  ? [
+                      FeaturedImageItem(
+                        label: 'Digital Services',
+                        imageAsset: HomeImages.farmerFeat1,
+                        onTap: () => setState(() => _selectedIndex = 1),
+                      ),
+                      FeaturedImageItem(
+                        label: 'Farmers Hub',
+                        imageAsset: HomeImages.farmerFeat2,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MarketScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      FeaturedImageItem(
+                        label: 'Your Workspace',
+                        imageAsset: HomeImages.farmerFeat3,
+                        onTap: () => setState(() => _selectedIndex = 2),
+                      ),
+                      FeaturedImageItem(
+                        label: 'Skill Programs',
+                        imageAsset: HomeImages.farmerFeat4,
+                        onTap: () => _openHighlightsSeeAll(),
+                      ),
+                    ]
+                  : (category == 'Bank' || category == 'Banking / Financial Services')
+                  ? [
+                      FeaturedImageItem(
+                        label: 'Digital Services',
+                        imageAsset: HomeImages.bankFeat1,
+                        onTap: () => setState(() => _selectedIndex = 1),
+                      ),
+                      FeaturedImageItem(
+                        label: 'Bank Hub',
+                        imageAsset: HomeImages.bankFeat2,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => OnlineBankingScreen(userData: widget.userData),
+                            ),
+                          );
+                        },
+                      ),
+                      FeaturedImageItem(
+                        label: 'Your Workspace',
+                        imageAsset: HomeImages.bankFeat3,
+                        onTap: () => setState(() => _selectedIndex = 2),
+                      ),
+                      FeaturedImageItem(
+                        label: 'Skill Programs',
+                        imageAsset: HomeImages.bankFeat4,
+                        onTap: () => _openHighlightsSeeAll(),
+                      ),
+                    ]
+                  : [
+                      FeaturedImageItem(
+                        label: 'Digital Services',
+                        imageAsset: HomeImages.services,
+                        onTap: () => setState(() => _selectedIndex = 1),
+                      ),
+                      FeaturedImageItem(
+                        label: '$category Hub',
+                        imageAsset: HomeImages.business,
+                        onTap: () {
+                          if (category == 'Job Seeker') {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => AvailableJobsScreen(userData: widget.userData),
                           ),
                         );
-                      } else if (category == 'Bank' || category == 'Banker') {
+                      } else if ((category == 'Bank' || category == 'Banking / Financial Services') || category == 'Banker') {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -1929,12 +1958,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Colors.purple,
           () => _handleQuickAction(category, "Interview Prep"),
         ),
-        _quickActionCard(
-          "Market",
-          Icons.storefront,
-          Colors.green,
-          () => _handleQuickAction(category, "Market"),
-        ),
       ]);
     }
     if (category == 'Student') {
@@ -1986,12 +2009,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Icons.description,
           Colors.deepOrange,
           () => _handleQuickAction(category, "Education Loan"),
-        ),
-        _quickActionCard(
-          "Market",
-          Icons.storefront,
-          Colors.green,
-          () => _handleQuickAction(category, "Market"),
         ),
       ]);
     } else if (category == 'Business') {
@@ -2138,7 +2155,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           () => _handleQuickAction(category, "Market"),
         ),
       ]);
-    } else if (category == 'Bank') {
+    } else if ((category == 'Bank' || category == 'Banking / Financial Services')) {
       actions.addAll([
         _quickActionCard(
           "My Wallet",
@@ -2509,6 +2526,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
         return;
       }
+      if (action == "Business Leads") {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MyLoansScreen(userId: _parsedUserId(), category: LeadCategory.business),
+          ),
+        );
+        return;
+      }
+      if (action == "My Jobs") {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MyJobsScreen(userId: _parsedUserId()),
+          ),
+        );
+        return;
+      }
       if (action == "AI Graphics") {
         Navigator.push(
           context,
@@ -2629,7 +2664,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return;
     }
 
-    if (category == 'Bank') {
+    if ((category == 'Bank' || category == 'Banking / Financial Services')) {
       if (action == "Business Leads") {
         Navigator.push(
           context,
@@ -2796,7 +2831,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           imageAsset: HomeImages.business,
         ),
       ];
-    } else if (category == 'Bank') {
+    } else if ((category == 'Bank' || category == 'Banking / Financial Services')) {
       return [
         _infoCard(
           Icons.account_balance,
@@ -2902,7 +2937,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ];
     }
-    if (category == 'Bank' || category == 'Banking / Financial Services') {
+    if ((category == 'Bank' || category == 'Banking / Financial Services')) {
       return [
         _infoCard(
           Icons.account_balance_outlined,
@@ -2978,7 +3013,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       relevantKeys.addAll(['college_name', 'standard_year', 'stream']);
     } else if (category == 'Farmers' || category == 'Farmer') {
       relevantKeys.addAll(['crop_name', 'land_size']);
-    } else if (category == 'Bank' || category == 'Banking / Financial Services' || category == 'Banker') {
+    } else if ((category == 'Bank' || category == 'Banking / Financial Services') || category == 'Banker') {
       relevantKeys.addAll(['bank_name', 'branch_name']);
     }
 

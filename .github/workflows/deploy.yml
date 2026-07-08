@@ -6,9 +6,8 @@ on:
       - main # Runs whenever you push to the main branch
 
 jobs:
-  build-and-deploy:
+  deploy-frontend:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -24,11 +23,26 @@ jobs:
       - name: Build Flutter Web App
         run: flutter build web --release
 
-      - name: Upload to Hostinger via FTP
+      - name: Upload Frontend to Hostinger via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./build/web/
-          server-dir: /public_html/ # Change to a subfolder if your web app doesn't live in the main root
+          server-dir: /public_html/ 
+
+  deploy-admin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Upload admin to Hostinger via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./admin_portal/dist
+          server-dir: /public_html/admin/
