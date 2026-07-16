@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart';
 /// On a **physical phone**, replace with your machine's LAN IP (e.g. `192.168.1.5`)
 /// or run the backend on a reachable host.
 abstract final class ApiConfig {
-  static const String _hostLoopback = 'https://orchid-dunlin-775683.hostingersite.com/api';
+  static const String _hostLoopback = 'https://orchid-dunlin-775683.hostingersite.com/api/public/api';
   static const String _androidEmulator = 'http://10.0.2.2:8000/api';
   static const String _localWebBackend = 'http://127.0.0.1:8000/api';
 
