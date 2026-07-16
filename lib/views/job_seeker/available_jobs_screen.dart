@@ -234,7 +234,26 @@ class _AvailableJobsScreenState extends State<AvailableJobsScreen> {
               ),
             );
           }
-          final jobs = snapshot.data ?? [];
+          var jobs = snapshot.data ?? [];
+          
+          final userCategory = widget.userData['category']?.toString();
+          if (userCategory == 'Job Seeker - Internship') {
+            jobs = jobs.where((job) {
+              if (job is! Map) return false;
+              Map<String, dynamic> d = {};
+              if (job['details'] is Map) d = Map<String, dynamic>.from(job['details']);
+              else if (job['details'] is String) try { d = jsonDecode(job['details']); } catch (_) {}
+              return d['job_type'] == 'Internship';
+            }).toList();
+          } else if (userCategory == 'Job Seeker - Jobs') {
+            jobs = jobs.where((job) {
+              if (job is! Map) return false;
+              Map<String, dynamic> d = {};
+              if (job['details'] is Map) d = Map<String, dynamic>.from(job['details']);
+              else if (job['details'] is String) try { d = jsonDecode(job['details']); } catch (_) {}
+              return d['job_type'] != 'Internship';
+            }).toList();
+          }
           if (jobs.isEmpty) {
             return Center(
               child: Column(

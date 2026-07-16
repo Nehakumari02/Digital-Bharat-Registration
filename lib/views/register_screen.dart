@@ -38,7 +38,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _validatingPartnerCode = false;
 
   String? _selectedCategory;
-  final List<String> _categories = ['Student', 'Business', 'Banking / Financial Services', 'Farmers', 'Job Seeker'];
+  String? _selectedAgentSubCategory;
+  final List<String> _categories = ['Student', 'Business', 'Banking / Financial Services', 'Farmers', 'Job Seeker', 'Agent'];
+  final List<String> _agentSubCategories = [
+    'Real Estate',
+    'Insurance',
+    'Travel Agent',
+    'Digital Services',
+    'CA / Document Agent',
+    'Institute/College'
+  ];
+  String? _selectedBusinessSubCategory;
+  final List<String> _businessSubCategories = [
+    'Solo Proprietor',
+    'Partnership',
+    'Private Limited',
+    'LLP',
+    'Other'
+  ];
+  String? _selectedStudentSubCategory;
+  final List<String> _studentSubCategories = [
+    'School',
+    'High School',
+    'Under Graduate',
+    'Post Graduate',
+    'Diploma'
+  ];
+  String? _selectedJobSeekerSubCategory;
+  final List<String> _jobSeekerSubCategories = [
+    'Jobs',
+    'Internship'
+  ];
 
   String? _selectedState;
   String? _selectedCity;
@@ -452,10 +482,127 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           child: Text(category),
                         );
                       }).toList(),
-                      onChanged: (value) => setState(() => _selectedCategory = value),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedCategory = value;
+                          if (value != 'Agent') {
+                            _selectedAgentSubCategory = null;
+                          }
+                          if (value != 'Business') {
+                            _selectedBusinessSubCategory = null;
+                          }
+                        });
+                      },
                       validator: (v) => v == null ? "Select Category" : null,
                     ),
-                    
+                    if (_selectedCategory == 'Agent') const SizedBox(height: 16),
+                    if (_selectedCategory == 'Agent') DropdownButtonFormField<String>(
+                        value: _selectedAgentSubCategory,
+                        decoration: InputDecoration(
+                          labelText: 'Agent Type',
+                          prefixIcon: const Icon(Icons.support_agent, color: Color(0xFF2196F3), size: 20),
+                          filled: true,
+                          fillColor: Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).colorScheme.surface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                        ),
+                        items: _agentSubCategories.map((String sub) {
+                          return DropdownMenuItem(
+                            value: sub,
+                            child: Text(sub),
+                          );
+                        }).toList(),
+                        onChanged: (value) => setState(() => _selectedAgentSubCategory = value),
+                        validator: (v) => v == null ? "Select Agent Type" : null,
+                      ),
+                      
+                    if (_selectedCategory == 'Business') const SizedBox(height: 16),
+                    if (_selectedCategory == 'Business') DropdownButtonFormField<String>(
+                        value: _selectedBusinessSubCategory,
+                        decoration: InputDecoration(
+                          labelText: 'Business Type',
+                          prefixIcon: const Icon(Icons.business_center_outlined, color: Color(0xFF2196F3), size: 20),
+                          filled: true,
+                          fillColor: Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).colorScheme.surface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                        ),
+                        items: _businessSubCategories.map((String sub) {
+                          return DropdownMenuItem(
+                            value: sub,
+                            child: Text(sub),
+                          );
+                        }).toList(),
+                        onChanged: (value) => setState(() => _selectedBusinessSubCategory = value),
+                        validator: (v) => v == null ? "Select Business Type" : null,
+                      ),
+
+                    if (_selectedCategory == 'Student') const SizedBox(height: 16),
+                    if (_selectedCategory == 'Student') DropdownButtonFormField<String>(
+                        value: _selectedStudentSubCategory,
+                        decoration: InputDecoration(
+                          labelText: 'Education Level',
+                          prefixIcon: const Icon(Icons.school_outlined, color: Color(0xFF2196F3), size: 20),
+                          filled: true,
+                          fillColor: Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).colorScheme.surface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                        ),
+                        items: _studentSubCategories.map((String sub) {
+                          return DropdownMenuItem(
+                            value: sub,
+                            child: Text(sub),
+                          );
+                        }).toList(),
+                        onChanged: (value) => setState(() => _selectedStudentSubCategory = value),
+                        validator: (v) => v == null ? "Select Education Level" : null,
+                      ),
+
+                    if (_selectedCategory == 'Job Seeker') const SizedBox(height: 16),
+                    if (_selectedCategory == 'Job Seeker') DropdownButtonFormField<String>(
+                        value: _selectedJobSeekerSubCategory,
+                        decoration: InputDecoration(
+                          labelText: 'Looking For',
+                          prefixIcon: const Icon(Icons.work_outline, color: Color(0xFF2196F3), size: 20),
+                          filled: true,
+                          fillColor: Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).colorScheme.surface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                        ),
+                        items: _jobSeekerSubCategories.map((String sub) {
+                          return DropdownMenuItem(
+                            value: sub,
+                            child: Text(sub),
+                          );
+                        }).toList(),
+                        onChanged: (value) => setState(() => _selectedJobSeekerSubCategory = value),
+                        validator: (v) => v == null ? "Select what you are looking for" : null,
+                      ),
+
                     const SizedBox(height: 40),
                     SizedBox(
                       width: double.infinity,
@@ -478,7 +625,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 mobile: _mobileController.text,
                                 email: _emailController.text,
                                 password: _passwordController.text,
-                                category: _selectedCategory!,
+                                category: _selectedCategory == 'Agent'
+                                    ? 'Agent - $_selectedAgentSubCategory'
+                                    : _selectedCategory == 'Business'
+                                        ? 'Business - $_selectedBusinessSubCategory'
+                                        : _selectedCategory == 'Student'
+                                            ? 'Student - $_selectedStudentSubCategory'
+                                            : _selectedCategory == 'Job Seeker'
+                                                ? 'Job Seeker - $_selectedJobSeekerSubCategory'
+                                                : _selectedCategory!,
                                 pincode: _pincodeController.text,
                                 district: _districtController.text,
                                 city: _selectedCity == 'Other' ? _cityController.text : _selectedCity!,

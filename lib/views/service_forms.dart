@@ -196,6 +196,689 @@ String? _toIsoDate(String? v) {
   return '$y-$m-$day';
 }
 
+// --- SHARED INSURANCE FORMS (visible to all user categories) ---
+
+class HealthInsuranceForm extends StatefulWidget {
+  final Map<String, dynamic> userData;
+  const HealthInsuranceForm({super.key, required this.userData});
+  @override
+  State<HealthInsuranceForm> createState() => _HealthInsuranceFormState();
+}
+
+class _HealthInsuranceFormState extends State<HealthInsuranceForm> {
+  final _formKey = GlobalKey<FormState>();
+  bool _isSaving = false;
+
+  // Personal
+  final _name = TextEditingController();
+  final _mobile = TextEditingController();
+  final _email = TextEditingController();
+  final _aadhaar = TextEditingController();
+  final _pan = TextEditingController();
+  final _dob = TextEditingController();
+  String _gender = 'Male';
+  final _age = TextEditingController();
+
+  // Address
+  final _address = TextEditingController();
+  final _city = TextEditingController();
+  final _state = TextEditingController();
+  final _pincode = TextEditingController();
+
+  // Plan
+  String _planType = 'Individual';
+  final _sumInsured = TextEditingController();
+  final _premiumAmount = TextEditingController();
+  final _membersCovered = TextEditingController();
+  final _insurerName = TextEditingController();
+  String _policyTerm = '1 Year';
+
+  // Medical
+  bool _preExistingDisease = false;
+  final _diseaseDetails = TextEditingController();
+
+  // Nominee
+  final _nomineeName = TextEditingController();
+  final _nomineeRelation = TextEditingController();
+  final _nomineeDob = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final u = widget.userData;
+    _name.text = (u['name'] ?? '').toString();
+    _mobile.text = (u['mobile'] ?? '').toString();
+    _email.text = (u['email'] ?? '').toString();
+    _city.text = (u['city'] ?? '').toString();
+    _state.text = (u['state'] ?? '').toString();
+    _pincode.text = (u['pincode'] ?? '').toString();
+  }
+
+  @override
+  void dispose() {
+    for (final c in [_name, _mobile, _email, _aadhaar, _pan, _dob, _age,
+      _address, _city, _state, _pincode, _sumInsured, _premiumAmount,
+      _membersCovered, _insurerName, _diseaseDetails,
+      _nomineeName, _nomineeRelation, _nomineeDob]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _pickDate(TextEditingController ctrl) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1940),
+      lastDate: DateTime(2030),
+    );
+    if (picked != null) {
+      final y = picked.year;
+      final m = picked.month.toString().padLeft(2, '0');
+      final d = picked.day.toString().padLeft(2, '0');
+      ctrl.text = '$y-$m-$d';
+    }
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isSaving = true);
+
+    final payload = {
+      'type': 'health_insurance',
+      'user_id': widget.userData['id']?.toString() ?? '0',
+      'data': {
+        'applicant_name': _name.text.trim(),
+        'mobile': _mobile.text.trim(),
+        'email': _email.text.trim(),
+        'aadhaar': _aadhaar.text.trim(),
+        'pan': _pan.text.trim().toUpperCase(),
+        'dob': _dob.text.trim(),
+        'gender': _gender,
+        'age': int.tryParse(_age.text.trim()) ?? 0,
+        'address': _address.text.trim(),
+        'city': _city.text.trim(),
+        'state': _state.text.trim(),
+        'pincode': _pincode.text.trim(),
+        'plan_type': _planType,
+        'sum_insured': double.tryParse(_sumInsured.text.trim()) ?? 0,
+        'premium_amount': double.tryParse(_premiumAmount.text.trim()) ?? 0,
+        'members_covered': int.tryParse(_membersCovered.text.trim()) ?? 1,
+        'insurer_name': _insurerName.text.trim(),
+        'policy_term': _policyTerm,
+        'pre_existing_disease': _preExistingDisease,
+        'disease_details': _preExistingDisease ? _diseaseDetails.text.trim() : '',
+        'nominee_name': _nomineeName.text.trim(),
+        'nominee_relation': _nomineeRelation.text.trim(),
+        'nominee_dob': _nomineeDob.text.trim(),
+      },
+    };
+
+    final result = await ServiceController().submitData(payload);
+    setState(() => _isSaving = false);
+    if (!mounted) return;
+
+    if (result.ok) {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 32),
+            SizedBox(width: 10),
+            Text('Application Submitted!'),
+          ]),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Your Health Insurance application has been submitted successfully.'),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Name: ${_name.text}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text('Plan: $_planType · Sum Insured: ₹${_sumInsured.text}'),
+                  Text('Term: $_policyTerm'),
+                ]),
+              ),
+              const SizedBox(height: 8),
+              const Text('You will be notified once reviewed.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () { Navigator.pop(context); Navigator.pop(context); },
+              child: const Text('Done'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${result.errorMessage.isEmpty ? 'Submission failed' : result.errorMessage}'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  InputDecoration _dropStyle(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: const Color(0xFF2196F3)),
+      filled: true,
+      fillColor: Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).colorScheme.surface,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.grey.shade200)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFF2196F3), width: 2)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF0F8FF),
+      appBar: AppBar(
+        title: const Text('Health Insurance'),
+        backgroundColor: const Color(0xFF1565C0),
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: Form(
+        key: _formKey,
+        child: ResponsiveScrollBody(children: [
+          // Hero Banner
+          Container(
+            margin: const EdgeInsets.only(bottom: 24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1565C0), Color(0xFF42A5F5)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Row(children: [
+              const Icon(Icons.health_and_safety, color: Colors.white, size: 48),
+              const SizedBox(width: 16),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('Health Insurance', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                const SizedBox(height: 4),
+                Text('Protect yourself & your family from medical expenses',
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12)),
+              ])),
+            ]),
+          ),
+
+          _buildSectionTitle('Personal Details'),
+          _loanFormField(controller: _name, label: 'Full Name', icon: Icons.person_outline, validator: (v) => _req(v, 'Enter name')),
+          _loanFormField(controller: _mobile, label: 'Mobile Number', icon: Icons.phone_outlined, keyboardType: TextInputType.phone, validator: (v) => _req(v, 'Enter mobile')),
+          _loanFormField(controller: _email, label: 'Email Address', icon: Icons.mail_outline, keyboardType: TextInputType.emailAddress, validator: _optEmail),
+          _loanFormField(controller: _aadhaar, label: 'Aadhaar Number', icon: Icons.credit_card, keyboardType: TextInputType.number, validator: _aadhaarOptional),
+          _loanFormField(controller: _pan, label: 'PAN Number (optional)', icon: Icons.badge_outlined, validator: _panOptional),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: GestureDetector(
+              onTap: () => _pickDate(_dob),
+              child: AbsorbPointer(
+                child: TextFormField(
+                  controller: _dob,
+                  decoration: _inputStyle(context, 'Date of Birth', Icons.cake_outlined),
+                  validator: (v) => _req(v, 'Select DOB'),
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: DropdownButtonFormField<String>(
+              value: _gender,
+              decoration: _dropStyle('Gender', Icons.wc_outlined),
+              items: ['Male', 'Female', 'Other'].map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
+              onChanged: (v) => setState(() => _gender = v!),
+            ),
+          ),
+          _loanFormField(controller: _age, label: 'Age', icon: Icons.numbers, keyboardType: TextInputType.number, validator: (v) => _req(v, 'Enter age')),
+
+          _buildSectionTitle('Address'),
+          _loanFormField(controller: _address, label: 'Full Address', icon: Icons.home_outlined, maxLines: 2, validator: (v) => _req(v, 'Enter address')),
+          _loanFormField(controller: _city, label: 'City', icon: Icons.location_city_outlined, validator: (v) => _req(v, 'Enter city')),
+          _loanFormField(controller: _state, label: 'State', icon: Icons.map_outlined, validator: (v) => _req(v, 'Enter state')),
+          _loanFormField(controller: _pincode, label: 'Pincode', icon: Icons.pin_drop_outlined, keyboardType: TextInputType.number, validator: (v) => _req(v, 'Enter pincode')),
+
+          _buildSectionTitle('Insurance Plan'),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: DropdownButtonFormField<String>(
+              value: _planType,
+              decoration: _dropStyle('Plan Type', Icons.assignment_outlined),
+              items: ['Individual', 'Family Floater', 'Senior Citizen', 'Critical Illness']
+                  .map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
+              onChanged: (v) => setState(() => _planType = v!),
+            ),
+          ),
+          _loanFormField(controller: _sumInsured, label: 'Sum Insured (₹)', icon: Icons.shield_outlined, keyboardType: TextInputType.number, validator: (v) => _req(v, 'Enter sum insured')),
+          _loanFormField(controller: _premiumAmount, label: 'Estimated Premium (₹)', icon: Icons.currency_rupee, keyboardType: TextInputType.number),
+          _loanFormField(controller: _membersCovered, label: 'Members to be Covered', icon: Icons.group_outlined, keyboardType: TextInputType.number, validator: (v) => _req(v, 'Enter count')),
+          _loanFormField(controller: _insurerName, label: 'Preferred Insurer (optional)', icon: Icons.business_outlined),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: DropdownButtonFormField<String>(
+              value: _policyTerm,
+              decoration: _dropStyle('Policy Term', Icons.calendar_today_outlined),
+              items: ['1 Year', '2 Years', '3 Years'].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+              onChanged: (v) => setState(() => _policyTerm = v!),
+            ),
+          ),
+
+          _buildSectionTitle('Medical History'),
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade200),
+              borderRadius: BorderRadius.circular(16),
+              color: Theme.of(context).colorScheme.surface,
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Pre-existing Disease?', style: TextStyle(fontWeight: FontWeight.w600)),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(_preExistingDisease ? 'Yes — please describe below' : 'No pre-existing disease'),
+                value: _preExistingDisease,
+                onChanged: (v) => setState(() => _preExistingDisease = v),
+                activeColor: const Color(0xFF2196F3),
+              ),
+              if (_preExistingDisease)
+                TextFormField(
+                  controller: _diseaseDetails,
+                  decoration: _inputStyle(context, 'Describe the condition(s)', Icons.medical_information_outlined),
+                  maxLines: 2,
+                  validator: _preExistingDisease ? (v) => _req(v, 'Please describe') : null,
+                ),
+            ]),
+          ),
+
+          _buildSectionTitle('Nominee Details'),
+          _loanFormField(controller: _nomineeName, label: 'Nominee Name', icon: Icons.person_pin_outlined, validator: (v) => _req(v, 'Enter nominee name')),
+          _loanFormField(controller: _nomineeRelation, label: 'Relation with Nominee', icon: Icons.family_restroom, validator: (v) => _req(v, 'Enter relation')),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 24),
+            child: GestureDetector(
+              onTap: () => _pickDate(_nomineeDob),
+              child: AbsorbPointer(
+                child: TextFormField(
+                  controller: _nomineeDob,
+                  decoration: _inputStyle(context, 'Nominee Date of Birth', Icons.cake_outlined),
+                ),
+              ),
+            ),
+          ),
+
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _isSaving ? null : _submit,
+              icon: _isSaving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.send_rounded),
+              label: Text(_isSaving ? 'Submitting…' : 'Submit Application'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1565C0),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 30),
+        ]),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MOTOR INSURANCE FORM
+// ─────────────────────────────────────────────────────────────────────────────
+
+class MotorInsuranceForm extends StatefulWidget {
+  final Map<String, dynamic> userData;
+  const MotorInsuranceForm({super.key, required this.userData});
+  @override
+  State<MotorInsuranceForm> createState() => _MotorInsuranceFormState();
+}
+
+class _MotorInsuranceFormState extends State<MotorInsuranceForm> {
+  final _formKey = GlobalKey<FormState>();
+  bool _isSaving = false;
+
+  // Personal
+  final _name = TextEditingController();
+  final _mobile = TextEditingController();
+  final _email = TextEditingController();
+  final _aadhaar = TextEditingController();
+  final _pan = TextEditingController();
+
+  // Address
+  final _address = TextEditingController();
+  final _city = TextEditingController();
+  final _state = TextEditingController();
+  final _pincode = TextEditingController();
+
+  // Vehicle
+  String _vehicleType = 'Four Wheeler';
+  final _vehicleMake = TextEditingController();
+  final _vehicleModel = TextEditingController();
+  final _vehicleYear = TextEditingController();
+  final _regNumber = TextEditingController();
+  final _engineNumber = TextEditingController();
+  final _chassisNumber = TextEditingController();
+  final _vehicleValue = TextEditingController();
+
+  // Plan
+  String _planType = 'Comprehensive';
+  final _insurerName = TextEditingController();
+  final _premiumAmount = TextEditingController();
+  String _policyTerm = '1 Year';
+
+  // Previous policy
+  bool _hasPreviousPolicy = false;
+  final _previousPolicyNumber = TextEditingController();
+  final _previousInsurer = TextEditingController();
+  String _claimHistory = 'No Claim';
+
+  // Nominee
+  final _nomineeName = TextEditingController();
+  final _nomineeRelation = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final u = widget.userData;
+    _name.text = (u['name'] ?? '').toString();
+    _mobile.text = (u['mobile'] ?? '').toString();
+    _email.text = (u['email'] ?? '').toString();
+    _city.text = (u['city'] ?? '').toString();
+    _state.text = (u['state'] ?? '').toString();
+    _pincode.text = (u['pincode'] ?? '').toString();
+  }
+
+  @override
+  void dispose() {
+    for (final c in [_name, _mobile, _email, _aadhaar, _pan,
+      _address, _city, _state, _pincode,
+      _vehicleMake, _vehicleModel, _vehicleYear, _regNumber,
+      _engineNumber, _chassisNumber, _vehicleValue,
+      _insurerName, _premiumAmount,
+      _previousPolicyNumber, _previousInsurer,
+      _nomineeName, _nomineeRelation]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isSaving = true);
+
+    final payload = {
+      'type': 'motor_insurance',
+      'user_id': widget.userData['id']?.toString() ?? '0',
+      'data': {
+        'applicant_name': _name.text.trim(),
+        'mobile': _mobile.text.trim(),
+        'email': _email.text.trim(),
+        'aadhaar': _aadhaar.text.trim(),
+        'pan': _pan.text.trim().toUpperCase(),
+        'address': _address.text.trim(),
+        'city': _city.text.trim(),
+        'state': _state.text.trim(),
+        'pincode': _pincode.text.trim(),
+        'vehicle_type': _vehicleType,
+        'vehicle_make': _vehicleMake.text.trim(),
+        'vehicle_model': _vehicleModel.text.trim(),
+        'vehicle_year': _vehicleYear.text.trim(),
+        'registration_number': _regNumber.text.trim(),
+        'engine_number': _engineNumber.text.trim(),
+        'chassis_number': _chassisNumber.text.trim(),
+        'vehicle_value': double.tryParse(_vehicleValue.text.trim()) ?? 0,
+        'plan_type': _planType,
+        'insurer_name': _insurerName.text.trim(),
+        'premium_amount': double.tryParse(_premiumAmount.text.trim()) ?? 0,
+        'policy_term': _policyTerm,
+        'has_previous_policy': _hasPreviousPolicy,
+        'previous_policy_number': _hasPreviousPolicy ? _previousPolicyNumber.text.trim() : '',
+        'previous_insurer': _hasPreviousPolicy ? _previousInsurer.text.trim() : '',
+        'claim_history': _hasPreviousPolicy ? _claimHistory : 'N/A',
+        'nominee_name': _nomineeName.text.trim(),
+        'nominee_relation': _nomineeRelation.text.trim(),
+      },
+    };
+
+    final result = await ServiceController().submitData(payload);
+    setState(() => _isSaving = false);
+    if (!mounted) return;
+
+    if (result.ok) {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 32),
+            SizedBox(width: 10),
+            Text('Application Submitted!'),
+          ]),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Your Motor Insurance application has been submitted successfully.'),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Name: ${_name.text}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text('Vehicle: ${_vehicleMake.text} ${_vehicleModel.text} ($_vehicleType)'),
+                  Text('Plan: $_planType · Term: $_policyTerm'),
+                ]),
+              ),
+              const SizedBox(height: 8),
+              const Text('You will be notified once reviewed.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () { Navigator.pop(context); Navigator.pop(context); },
+              child: const Text('Done'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${result.errorMessage.isEmpty ? 'Submission failed' : result.errorMessage}'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  InputDecoration _dropStyle(String label, IconData icon) => InputDecoration(
+    labelText: label,
+    prefixIcon: Icon(icon, color: const Color(0xFF2196F3)),
+    filled: true,
+    fillColor: Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).colorScheme.surface,
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.grey.shade200)),
+    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFF2196F3), width: 2)),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFFF8F0),
+      appBar: AppBar(
+        title: const Text('Motor Insurance'),
+        backgroundColor: const Color(0xFFE65100),
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: Form(
+        key: _formKey,
+        child: ResponsiveScrollBody(children: [
+          // Hero Banner
+          Container(
+            margin: const EdgeInsets.only(bottom: 24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFE65100), Color(0xFFFF9800)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Row(children: [
+              const Icon(Icons.directions_car, color: Colors.white, size: 48),
+              const SizedBox(width: 16),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('Motor Insurance', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                const SizedBox(height: 4),
+                Text('Insure your vehicle against accidents, theft & damage',
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12)),
+              ])),
+            ]),
+          ),
+
+          _buildSectionTitle('Personal Details'),
+          _loanFormField(controller: _name, label: 'Full Name', icon: Icons.person_outline, validator: (v) => _req(v, 'Enter name')),
+          _loanFormField(controller: _mobile, label: 'Mobile Number', icon: Icons.phone_outlined, keyboardType: TextInputType.phone, validator: (v) => _req(v, 'Enter mobile')),
+          _loanFormField(controller: _email, label: 'Email Address', icon: Icons.mail_outline, keyboardType: TextInputType.emailAddress, validator: _optEmail),
+          _loanFormField(controller: _aadhaar, label: 'Aadhaar Number', icon: Icons.credit_card, keyboardType: TextInputType.number, validator: _aadhaarOptional),
+          _loanFormField(controller: _pan, label: 'PAN Number (optional)', icon: Icons.badge_outlined, validator: _panOptional),
+
+          _buildSectionTitle('Address'),
+          _loanFormField(controller: _address, label: 'Full Address', icon: Icons.home_outlined, maxLines: 2, validator: (v) => _req(v, 'Enter address')),
+          _loanFormField(controller: _city, label: 'City', icon: Icons.location_city_outlined, validator: (v) => _req(v, 'Enter city')),
+          _loanFormField(controller: _state, label: 'State', icon: Icons.map_outlined, validator: (v) => _req(v, 'Enter state')),
+          _loanFormField(controller: _pincode, label: 'Pincode', icon: Icons.pin_drop_outlined, keyboardType: TextInputType.number, validator: (v) => _req(v, 'Enter pincode')),
+
+          _buildSectionTitle('Vehicle Details'),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: DropdownButtonFormField<String>(
+              value: _vehicleType,
+              decoration: _dropStyle('Vehicle Type', Icons.directions_car_outlined),
+              items: ['Two Wheeler', 'Four Wheeler', 'Commercial Vehicle', 'Three Wheeler']
+                  .map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+              onChanged: (v) => setState(() => _vehicleType = v!),
+            ),
+          ),
+          _loanFormField(controller: _vehicleMake, label: 'Vehicle Make (e.g. Maruti)', icon: Icons.branding_watermark_outlined, validator: (v) => _req(v, 'Enter make')),
+          _loanFormField(controller: _vehicleModel, label: 'Vehicle Model (e.g. Swift)', icon: Icons.car_repair, validator: (v) => _req(v, 'Enter model')),
+          _loanFormField(controller: _vehicleYear, label: 'Year of Manufacture', icon: Icons.calendar_today_outlined, keyboardType: TextInputType.number, validator: (v) => _req(v, 'Enter year')),
+          _loanFormField(controller: _regNumber, label: 'Registration Number', icon: Icons.confirmation_number_outlined, validator: (v) => _req(v, 'Enter reg. number')),
+          _loanFormField(controller: _engineNumber, label: 'Engine Number', icon: Icons.engineering_outlined),
+          _loanFormField(controller: _chassisNumber, label: 'Chassis Number', icon: Icons.linear_scale),
+          _loanFormField(controller: _vehicleValue, label: 'Vehicle IDV / Market Value (₹)', icon: Icons.currency_rupee, keyboardType: TextInputType.number, validator: (v) => _req(v, 'Enter vehicle value')),
+
+          _buildSectionTitle('Insurance Plan'),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: DropdownButtonFormField<String>(
+              value: _planType,
+              decoration: _dropStyle('Plan Type', Icons.assignment_outlined),
+              items: ['Comprehensive', 'Third Party', 'Own Damage']
+                  .map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
+              onChanged: (v) => setState(() => _planType = v!),
+            ),
+          ),
+          _loanFormField(controller: _insurerName, label: 'Preferred Insurer (optional)', icon: Icons.business_outlined),
+          _loanFormField(controller: _premiumAmount, label: 'Estimated Premium (₹)', icon: Icons.currency_rupee, keyboardType: TextInputType.number),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: DropdownButtonFormField<String>(
+              value: _policyTerm,
+              decoration: _dropStyle('Policy Term', Icons.calendar_month_outlined),
+              items: ['1 Year', '2 Years', '3 Years'].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+              onChanged: (v) => setState(() => _policyTerm = v!),
+            ),
+          ),
+
+          _buildSectionTitle('Previous Policy (if any)'),
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade200),
+              borderRadius: BorderRadius.circular(16),
+              color: Theme.of(context).colorScheme.surface,
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Have a previous policy?', style: TextStyle(fontWeight: FontWeight.w600)),
+                value: _hasPreviousPolicy,
+                onChanged: (v) => setState(() => _hasPreviousPolicy = v),
+                activeColor: const Color(0xFF2196F3),
+              ),
+              if (_hasPreviousPolicy) ...[
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _previousPolicyNumber,
+                  decoration: _inputStyle(context, 'Previous Policy Number', Icons.policy_outlined),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _previousInsurer,
+                  decoration: _inputStyle(context, 'Previous Insurer Name', Icons.business_outlined),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: _claimHistory,
+                  decoration: _dropStyle('Claim History', Icons.history_outlined),
+                  items: ['No Claim', '1 Claim', '2 Claims', '3+ Claims']
+                      .map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                  onChanged: (v) => setState(() => _claimHistory = v!),
+                ),
+              ],
+            ]),
+          ),
+
+          _buildSectionTitle('Nominee Details'),
+          _loanFormField(controller: _nomineeName, label: 'Nominee Name', icon: Icons.person_pin_outlined, validator: (v) => _req(v, 'Enter nominee name')),
+          _loanFormField(controller: _nomineeRelation, label: 'Relation with Nominee', icon: Icons.family_restroom, validator: (v) => _req(v, 'Enter relation')),
+          const SizedBox(height: 8),
+
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _isSaving ? null : _submit,
+              icon: _isSaving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.send_rounded),
+              label: Text(_isSaving ? 'Submitting…' : 'Submit Application'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE65100),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 30),
+        ]),
+      ),
+    );
+  }
+}
+
 // --- 1. STUDENT SERVICES ---
 
 class InternshipScreen extends StatefulWidget {
@@ -1750,10 +2433,10 @@ class _PostJobScreenState extends State<PostJobScreen> {
       lastDate: now.add(const Duration(days: 365)),
     );
     if (picked != null) {
-      _deadlineController.text =
-          '${picked.day.toString().padLeft(2, '0')}/'
-          '${picked.month.toString().padLeft(2, '0')}/'
-          '${picked.year}';
+      final y = picked.year;
+      final m = picked.month.toString().padLeft(2, '0');
+      final d = picked.day.toString().padLeft(2, '0');
+      _deadlineController.text = '$y-$m-$d';
     }
   }
 
@@ -3542,7 +4225,10 @@ class _BimaYojanaScreenState extends State<BimaYojanaScreen> {
       lastDate: DateTime(2030),
     );
     if (picked != null) {
-      ctrl.text = '${picked.day}/${picked.month}/${picked.year}';
+      final y = picked.year;
+      final m = picked.month.toString().padLeft(2, '0');
+      final d = picked.day.toString().padLeft(2, '0');
+      ctrl.text = '$y-$m-$d';
     }
   }
 
