@@ -9,7 +9,6 @@ import '../controllers/partner_wallet_controller.dart';
 import '../services/auth_session.dart';
 import '../utils/login_response_parser.dart';
 import '../utils/user_profile_helpers.dart';
-import 'admin/admin_dashboard.dart';
 import 'dart:convert';
 
 class LoginScreen extends StatefulWidget {
@@ -224,25 +223,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 16),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AdminDashboardScreen(),
-                ),
-              );
-            },
-            child: const Text(
-              "Go to Admin Panel",
-              style: TextStyle(
-                color: Colors.white70,
-                fontWeight: FontWeight.w600,
-                decoration: TextDecoration.underline,
-              ),
-            ),
           ),
         ],
       ),

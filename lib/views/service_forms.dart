@@ -271,7 +271,7 @@ class _HealthInsuranceFormState extends State<HealthInsuranceForm> {
       initialDate: DateTime.now(),
       firstDate: DateTime(1940),
       lastDate: DateTime(2030),
-    );
+
     if (picked != null) {
       final y = picked.year;
       final m = picked.month.toString().padLeft(2, '0');
