@@ -608,7 +608,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           _serviceCard(
                             Icons.account_balance,
-                            "My Business Loans",
+                            "My Business Leads",
                             "Track MSME applications",
                             MyLoansScreen(
                               userId: _parsedUserId(),
@@ -733,7 +733,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           return [
                             _serviceCard(
                               Icons.business,
-                              "Business Loans",
+                              "Business Leads",
                               "Review MSME applications",
                               AllLeadsScreen(
                                 currentBankUserId: bankId,
@@ -1475,7 +1475,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     onTap: () => _handleQuickAction(category, "GST Registration"),
                   ),
                   FeaturedImageItem(
-                    label: 'Business Loans',
+                    label: 'Business Leads',
                     imageAsset: HomeImages.businessLoans,
                     onTap: () => _handleQuickAction(category, "MSME Loans"),
                   ),

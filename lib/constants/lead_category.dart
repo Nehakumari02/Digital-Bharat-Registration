@@ -1,7 +1,7 @@
 /// Loan lead buckets aligned with Laravel tables and `loan_type` values.
 enum LeadCategory {
   business(
-    title: 'Business Loans',
+    title: 'Business Leads',
     apiType: 'Business Loan',
     tableName: 'business_loans',
   ),
